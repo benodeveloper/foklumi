@@ -51,3 +51,6 @@ settings.json
 # --- Logs and temp files ---
 *.log
 *.tmp
+data/vocab.json
+tools/kaikki.jsonl
+tools/tatoeba.tsv
