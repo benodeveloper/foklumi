@@ -27,22 +27,25 @@ class Speaker:
     """Speaks German text in a background thread. say() replaces anything
     that is playing; pass a list to speak several texts in a row."""
 
-    def __init__(self):
+    def __init__(self, model_path: str = "", speed: float = 1.0):
         self._lock = threading.Lock()
-        self._gen = 0          # bumped on every say()/stop() to cancel old work
+        self._gen = 0
         self._procs = []
-        self.engine = None     # "piper", "espeak", "say" or "powershell"
+        self.engine = None
         self.problem = None
         self._piper = None
         self._model = None
         self._rate = 22050
+        self.speed = speed
+        self._model_hint = model_path
         self._detect()
-        self.available = self.engine is not None
-
-    # ---------- setup ----------
+        self.available = self.engine is not None    
+        
+        # ---------- setup ----------
 
     def _detect(self):
-        model = os.environ.get("PIPER_MODEL_DE") or _CONFIG_MODEL
+        model = (os.environ.get("PIPER_MODEL_DE") or self._model_hint
+                 or _CONFIG_MODEL)
         model = os.path.expanduser(model) if model else ""
         piper = shutil.which("piper-tts") or shutil.which("piper")
         aplay = shutil.which("aplay")
@@ -106,6 +109,15 @@ class Speaker:
             except OSError:
                 pass
 
+    def reconfigure(self, model_path: str, speed: float):
+        self.stop()
+        self.speed = speed
+        self._model_hint = model_path
+        self.engine = None
+        self.problem = None
+        self._detect()
+        self.available = self.engine is not None
+
     # ---------- worker thread ----------
 
     def _run(self, queue, gen):
@@ -145,7 +157,8 @@ class Speaker:
         quiet = {"stdout": subprocess.DEVNULL, "stderr": subprocess.DEVNULL}
         if self.engine == "piper":
             piper = subprocess.Popen(
-                [self._piper, "-m", self._model, "--output-raw"],
+                [self._piper, "-m", self._model, "--output-raw",
+                 "--length-scale", f"{self.speed:.2f}"],
                 stdin=subprocess.PIPE, stdout=subprocess.PIPE,
                 stderr=subprocess.DEVNULL)
             aplay = subprocess.Popen(

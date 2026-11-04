@@ -16,11 +16,19 @@ class Word:
 
 
 class VocabDeck:
-    def __init__(self, path: Path = DEFAULT_PATH, rng=None):
-        with open(path, encoding="utf-8") as f:
-            self._words = [Word(**entry) for entry in json.load(f)]
-        if not self._words:
-            raise ValueError("Vocabulary file is empty")
+    def __init__(self, path=None, rng=None):
+        self.warning = None
+        words = None
+        if path:
+            try:
+                with open(Path(path).expanduser(), encoding="utf-8") as f:
+                    words = [Word(**entry) for entry in json.load(f)]
+            except (OSError, ValueError, TypeError) as e:
+                self.warning = f"custom vocab not used ({e}); using built-in list"
+        if not words:
+            with open(DEFAULT_PATH, encoding="utf-8") as f:
+                words = [Word(**entry) for entry in json.load(f)]
+        self._words = words
         self._rng = rng or random.Random()
         self._queue: list[Word] = []
 

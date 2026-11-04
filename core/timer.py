@@ -20,6 +20,7 @@ class PomodoroTimer:
         self._clock = clock
         self._phase = Phase.IDLE
         self._deadline = 0.0
+        self.auto_continue = True
         # The UI will plug into these two callbacks
         self.on_phase_changed: Optional[Callable[[Phase], None]] = None
         self.on_tick: Optional[Callable[[Phase, int], None]] = None
@@ -43,12 +44,20 @@ class PomodoroTimer:
         if self.on_phase_changed:
             self.on_phase_changed(Phase.IDLE)
 
+    def set_durations(self, focus_seconds: int, break_seconds: int):
+        """Applies from the next phase on; the running countdown is unchanged."""
+        self.focus_seconds = focus_seconds
+        self.break_seconds = break_seconds
+
     def skip(self):
-        """Jump to the next phase (useful for testing)."""
+        """Jump to the next phase."""
         if self._phase is Phase.FOCUS:
             self._enter(Phase.BREAK)
         elif self._phase is Phase.BREAK:
-            self._enter(Phase.FOCUS)
+            if self.auto_continue:
+                self._enter(Phase.FOCUS)
+            else:
+                self.stop()
 
     def tick(self):
         if self._phase is Phase.IDLE:

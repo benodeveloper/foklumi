@@ -8,7 +8,6 @@ from ui.ring import RingTimer
 from ui.util import format_time, is_x11
 
 EMERGENCY_MODS = Qt.ControlModifier | Qt.AltModifier | Qt.ShiftModifier
-BREAK_COLOR = "#34d399"
 
 
 class ScreenCover(QWidget):
@@ -104,9 +103,9 @@ class BreakOverlay(ScreenCover):
         button.clicked.connect(signal)
         return button
 
-    def set_countdown(self, remaining: int, total: int):
+    def set_countdown(self, remaining: int, total: int, color: str):
         self._ring.set_state(remaining / max(1, total),
-                             format_time(remaining), "BREAK", BREAK_COLOR)
+                             format_time(remaining), "BREAK", color)
 
     def set_word(self, word: Word):
         self._german.setText(word.german)
@@ -123,18 +122,24 @@ class BreakOverlay(ScreenCover):
 
 
 class BreakScreen:
-    """Covers every monitor, grabs input on X11, shows one word."""
+    """Covers every monitor, grabs input on X11 (if enabled), shows one word."""
 
-    def __init__(self, speaker, on_emergency, grab=True):
+    def __init__(self, speaker, on_emergency, settings):
         self._speaker = speaker
         self._on_emergency = on_emergency
-        self._use_grab = grab and is_x11()
+        self._use_grab = False
+        self._color = settings.break_color
         self._windows = []
         self._main = None
         self._total = 1
         self._grab_timer = QTimer()
         self._grab_timer.setInterval(150)
         self._grab_timer.timeout.connect(self._try_grab)
+        self.configure(settings, allow_grab=True)
+
+    def configure(self, settings, allow_grab=True):
+        self._color = settings.break_color
+        self._use_grab = allow_grab and settings.lock_input and is_x11()
 
     def show(self, word: Word, total_seconds: int, auto_speak: bool):
         self.hide()
@@ -144,7 +149,7 @@ class BreakScreen:
             if screen == primary:
                 main = BreakOverlay(screen)
                 main.set_word(word)
-                main.set_countdown(self._total, self._total)
+                main.set_countdown(self._total, self._total, self._color)
                 main.speak_word.connect(
                     lambda: self._speaker.say(word.german))
                 main.speak_sentence.connect(
@@ -166,13 +171,13 @@ class BreakScreen:
     def update(self, remaining: int):
         if not self._main:
             return
-        self._main.set_countdown(remaining, self._total)
+        self._main.set_countdown(remaining, self._total, self._color)
         for window in self._windows:  # stay above popups, panels, etc.
             window.raise_()
 
     def hide(self):
         self._grab_timer.stop()
-        if self._main and self._use_grab:
+        if self._main:
             handle = self._main.windowHandle()
             if handle:
                 handle.setKeyboardGrabEnabled(False)
