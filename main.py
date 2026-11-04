@@ -1,7 +1,7 @@
 import sys
 
 from PySide6.QtCore import QTimer
-from PySide6.QtWidgets import QApplication, QSystemTrayIcon
+from PySide6.QtWidgets import QApplication, QMessageBox, QSystemTrayIcon
 
 from core.settings import Settings
 from core.timer import Phase, PomodoroTimer
@@ -34,6 +34,7 @@ def main():
     allow_grab = "--no-grab" not in sys.argv
 
     settings = Settings.load()
+    print(f"[settings] stored in {Settings.location()}")
     state = {"settings": settings, "deck": make_deck(settings),
              "dialog_open": False}
 
@@ -72,10 +73,18 @@ def main():
             dialog = SettingsDialog(
                 current, Settings(),
                 parent=window if window.is_shown() else None)
-            if dialog.exec() != dialog.accepted:
+            if not dialog.exec():  # 0 = cancelled
                 return
             new = dialog.result_settings()
-            new.save()
+            try:
+                new.save()
+                print(f"[settings] saved to {Settings.location()}")
+            except OSError as e:
+                print(f"[settings] SAVE FAILED: {e}")
+                QMessageBox.warning(
+                    None, "Foklumi",
+                    f"Your settings could not be saved:\n{e}\n\n"
+                    "They will apply until you quit the app.")
             state["settings"] = new
             window.apply_settings(new)
             overlay.configure(new, allow_grab)

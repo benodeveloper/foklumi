@@ -1,14 +1,34 @@
-import json
-import os
-from dataclasses import asdict, dataclass, fields
-from pathlib import Path
+from dataclasses import dataclass, fields
+
+from PySide6.QtCore import QSettings
+
+ORGANIZATION = "foklumi"
+APPLICATION = "foklumi"
 
 
-def settings_path() -> Path:
-    base = os.environ.get("XDG_CONFIG_HOME") or Path.home() / ".config"
-    if os.name == "nt":
-        base = os.environ.get("APPDATA") or base
-    return Path(base) / "foklumi" / "settings.json"
+def _store(path=None) -> QSettings:
+    """The platform's normal settings store (a .conf file in ~/.config on
+    Linux, the registry on Windows, a plist on macOS). A path forces an INI
+    file at that location, which is what the tests use."""
+    if path is not None:
+        return QSettings(str(path), QSettings.Format.IniFormat)
+    return QSettings(ORGANIZATION, APPLICATION)
+
+
+def _coerce(default, raw):
+    """Turn whatever QSettings returned into the type of the default.
+    INI files store everything as text, so "false" must become False."""
+    if isinstance(raw, (list, tuple)):  # INI turns "a,b" into a list
+        raw = ",".join(str(x) for x in raw)
+    if isinstance(default, bool):
+        if isinstance(raw, str):
+            return raw.strip().lower() in ("true", "1", "yes", "on")
+        return bool(raw)
+    if isinstance(default, int):
+        return int(float(raw))
+    if isinstance(default, float):
+        return float(raw)
+    return "" if raw is None else str(raw)
 
 
 @dataclass
@@ -27,37 +47,26 @@ class Settings:
     idle_color: str = "#64748b"
     timer_size: int = 240
     always_on_top: bool = True
-    always_on_top: bool = True
     start_in_background: bool = False
     # vocabulary / speech
     vocab_path: str = ""
     piper_model: str = ""
 
+    @staticmethod
+    def location(path=None) -> str:
+        """Where the settings are stored (for messages and debugging)."""
+        return _store(path).fileName()
+
     @classmethod
-    def load(cls, path: Path | None = None) -> "Settings":
-        path = path or settings_path()
+    def load(cls, path=None) -> "Settings":
         s = cls()
-        try:
-            with open(path, encoding="utf-8") as f:
-                raw = json.load(f)
-        except (OSError, ValueError):
-            return s
-        if not isinstance(raw, dict):
-            return s
+        store = _store(path)
         for field in fields(cls):
-            if field.name in raw:
+            if store.contains(field.name):
                 try:
                     default = getattr(s, field.name)
-                    value = raw[field.name]
-                    if isinstance(default, bool):
-                        value = bool(value)
-                    elif isinstance(default, int):
-                        value = int(value)
-                    elif isinstance(default, float):
-                        value = float(value)
-                    else:
-                        value = str(value)
-                    setattr(s, field.name, value)
+                    setattr(s, field.name,
+                            _coerce(default, store.value(field.name)))
                 except (TypeError, ValueError):
                     pass  # keep the default for a bad value
         s.clamp()
@@ -69,10 +78,12 @@ class Settings:
         self.speech_speed = min(2.5, max(0.5, self.speech_speed))
         self.timer_size = min(400, max(160, self.timer_size))
 
-    def save(self, path: Path | None = None):
-        path = path or settings_path()
-        path.parent.mkdir(parents=True, exist_ok=True)
-        tmp = path.with_suffix(".tmp")
-        with open(tmp, "w", encoding="utf-8") as f:
-            json.dump(asdict(self), f, indent=2)
-        tmp.replace(path)  # atomic, so a crash never leaves a half file
+    def save(self, path=None):
+        """Writes every setting to disk right away. Raises OSError if the
+        settings file could not be written."""
+        store = _store(path)
+        for field in fields(self):
+            store.setValue(field.name, getattr(self, field.name))
+        store.sync()
+        if store.status() != QSettings.Status.NoError:
+            raise OSError(f"could not write settings to {store.fileName()}")
