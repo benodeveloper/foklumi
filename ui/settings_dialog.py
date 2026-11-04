@@ -1,6 +1,5 @@
 from dataclasses import replace
 
-from PySide6.QtCore import Qt
 from PySide6.QtGui import QColor
 from PySide6.QtWidgets import (QCheckBox, QColorDialog, QDialog,
                                QDialogButtonBox, QDoubleSpinBox, QFileDialog,
@@ -100,12 +99,18 @@ class SettingsDialog(QDialog):
         self.size = QSpinBox(); self.size.setRange(160, 400)
         self.size.setSuffix(" px")
         self.on_top = QCheckBox("Keep the timer above other windows")
+        self.background = QCheckBox(
+            "Start hidden in the background (needs a system tray)")
+        bg_note = QLabel("Click the tray icon to show the timer again.")
+        bg_note.setStyleSheet("color: gray;")
         look = QFormLayout()
         look.addRow("Focus color", self.c_focus)
         look.addRow("Break color", self.c_break)
         look.addRow("Idle color", self.c_idle)
         look.addRow("Timer size", self.size)
         look.addRow("", self.on_top)
+        look.addRow("", self.background)
+        look.addRow("", bg_note)
 
         # ----- vocabulary -----
         self.vocab = PathEdit("", "Vocabulary JSON (*.json);;All files (*)")
@@ -150,6 +155,7 @@ class SettingsDialog(QDialog):
         self.c_idle.set_color(s.idle_color)
         self.size.setValue(s.timer_size)
         self.on_top.setChecked(s.always_on_top)
+        self.background.setChecked(s.start_in_background)
         self.vocab.edit.setText(s.vocab_path)
 
     def _accept(self):
@@ -167,6 +173,7 @@ class SettingsDialog(QDialog):
             idle_color=self.c_idle.color(),
             timer_size=self.size.value(),
             always_on_top=self.on_top.isChecked(),
+            start_in_background=self.background.isChecked(),
             vocab_path=self.vocab.text(),
         )
         s.clamp()

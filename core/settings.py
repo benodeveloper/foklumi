@@ -27,6 +27,8 @@ class Settings:
     idle_color: str = "#64748b"
     timer_size: int = 240
     always_on_top: bool = True
+    always_on_top: bool = True
+    start_in_background: bool = False
     # vocabulary / speech
     vocab_path: str = ""
     piper_model: str = ""

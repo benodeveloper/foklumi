@@ -1,7 +1,7 @@
 import sys
 
 from PySide6.QtCore import QTimer
-from PySide6.QtWidgets import QApplication
+from PySide6.QtWidgets import QApplication, QSystemTrayIcon
 
 from core.settings import Settings
 from core.timer import Phase, PomodoroTimer
@@ -10,17 +10,32 @@ from ui.break_overlay import BreakScreen
 from ui.main_window import MainWindow
 from ui.settings_dialog import SettingsDialog
 from ui.speech import Speaker
+from ui.tray import Tray
+from ui.util import format_time
+
+
+def make_deck(settings: Settings) -> VocabDeck:
+    deck = VocabDeck(settings.vocab_path or None)
+    if deck.warning:
+        print(f"[vocab] {deck.warning}")
+    return deck
 
 
 def main():
     app = QApplication(sys.argv)
+    # The app lives in the tray: hiding the timer or closing the break screen
+    # must not end the program. Only "Quit" does.
+    app.setQuitOnLastWindowClosed(False)
 
-    # --fast     10 s focus / 15 s break, ignores saved timing (for testing)
-    # --no-grab  cover the screen but never grab keyboard and mouse
+    # --fast        10 s focus / 15 s break, ignores saved timing (testing)
+    # --no-grab     cover the screen but never grab keyboard and mouse
+    # --background  start hidden in the tray
     fast = "--fast" in sys.argv
     allow_grab = "--no-grab" not in sys.argv
 
     settings = Settings.load()
+    state = {"settings": settings, "deck": make_deck(settings),
+             "dialog_open": False}
 
     def durations(s: Settings):
         return (10, 15) if fast else (s.focus_minutes * 60, s.break_seconds)
@@ -29,10 +44,6 @@ def main():
     pomo = PomodoroTimer(focus_seconds=focus_s, break_seconds=break_s)
     pomo.auto_continue = settings.auto_start_focus
 
-    deck = VocabDeck(settings.vocab_path or None)
-    if deck.warning:
-        print(f"[vocab] {deck.warning}")
-
     speaker = Speaker(settings.piper_model, settings.speech_speed)
     print(f"[speech] using {speaker.engine}" if speaker.available
           else f"[speech] disabled: {speaker.problem}")
@@ -40,45 +51,89 @@ def main():
     overlay = BreakScreen(speaker, on_emergency=pomo.stop, settings=settings)
     overlay.configure(settings, allow_grab)
 
-    state = {"settings": settings}
+    tray_ok = QSystemTrayIcon.isSystemTrayAvailable()
+    if not tray_ok:
+        print("[tray] no system tray found; 'hide' will minimize to the taskbar")
+
+    # ---------- actions ----------
+
+    def minimize():
+        if tray_ok:
+            window.hide()
+        else:
+            window.showMinimized()
 
     def open_settings():
-        current = state["settings"]
-        dialog = SettingsDialog(current, Settings(), parent=window)
-        if dialog.exec() != dialog.Accepted:
+        if state["dialog_open"]:
             return
-        new = dialog.result_settings()
-        new.save()
-        state["settings"] = new
-        window.apply_settings(new)
-        overlay.configure(new, allow_grab)
-        speaker.reconfigure(new.piper_model, new.speech_speed)
-        pomo.auto_continue = new.auto_start_focus
-        f, b = durations(new)
-        pomo.set_durations(f, b)
-        if new.vocab_path != current.vocab_path:
-            nonlocal_deck[0] = VocabDeck(new.vocab_path or None)
-            if nonlocal_deck[0].warning:
-                print(f"[vocab] {nonlocal_deck[0].warning}")
+        state["dialog_open"] = True
+        try:
+            current = state["settings"]
+            dialog = SettingsDialog(
+                current, Settings(),
+                parent=window if window.is_shown() else None)
+            if dialog.exec() != dialog.Accepted:
+                return
+            new = dialog.result_settings()
+            new.save()
+            state["settings"] = new
+            window.apply_settings(new)
+            overlay.configure(new, allow_grab)
+            speaker.reconfigure(new.piper_model, new.speech_speed)
+            pomo.auto_continue = new.auto_start_focus
+            f, b = durations(new)
+            pomo.set_durations(f, b)
+            if new.vocab_path != current.vocab_path:
+                state["deck"] = make_deck(new)
+            if tray:
+                tray.update_state(tray_color(pomo.phase),
+                                  tip(pomo.phase, pomo.remaining))
+        finally:
+            state["dialog_open"] = False
 
-    nonlocal_deck = [deck]  # a list so open_settings can swap the deck
+    # ---------- window and tray ----------
 
     window = MainWindow(
         settings, on_start=pomo.start, on_stop=pomo.stop, on_skip=pomo.skip,
-        on_settings=open_settings, on_quit=app.quit)
+        on_settings=open_settings, on_minimize=minimize, on_quit=app.quit)
+
+    def tray_color(phase: Phase) -> str:
+        s = state["settings"]
+        return {Phase.FOCUS: s.focus_color, Phase.BREAK: s.break_color,
+                Phase.IDLE: s.idle_color}[phase]
+
+    def tip(phase: Phase, remaining: int) -> str:
+        if phase is Phase.IDLE:
+            return "Foklumi – ready"
+        name = "Focus" if phase is Phase.FOCUS else "Break"
+        return f"{name} {format_time(remaining)}"
+
+    tray = None
+    if tray_ok:
+        tray = Tray(window, on_start=pomo.start, on_stop=pomo.stop,
+                    on_skip=pomo.skip, on_settings=open_settings,
+                    on_quit=app.quit)
+        tray.update_state(tray_color(Phase.IDLE), tip(Phase.IDLE, 0))
+        tray.show()
+        app.aboutToQuit.connect(tray.hide)  # no stale icon after quitting
+
+    # ---------- timer callbacks ----------
 
     def on_phase(phase: Phase):
         window.set_phase(phase)
+        if tray:
+            tray.update_state(tray_color(phase), tip(phase, pomo.remaining))
         if phase is Phase.BREAK:
-            s = state["settings"]
-            overlay.show(nonlocal_deck[0].next_word(), pomo.break_seconds,
-                         s.auto_speak)
+            overlay.show(state["deck"].next_word(), pomo.break_seconds,
+                         state["settings"].auto_speak)
         else:
             overlay.hide()
             speaker.stop()
 
     def on_tick(phase: Phase, remaining: int):
         window.set_remaining(remaining)
+        if tray:
+            tray.set_tip(tip(phase, remaining))
         if phase is Phase.BREAK:
             overlay.update(remaining)
 
@@ -89,7 +144,12 @@ def main():
     ticker.timeout.connect(pomo.tick)
     ticker.start(500)
 
-    window.show()
+    background = settings.start_in_background or "--background" in sys.argv
+    if background and tray_ok:
+        print("[tray] started in the background")
+    else:
+        window.show()
+
     app.aboutToQuit.connect(speaker.stop)
     sys.exit(app.exec())
 

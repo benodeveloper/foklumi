@@ -9,11 +9,13 @@ class RingTimer(QWidget):
     """A round countdown: dark disc, clock ticks, and a ring that shrinks
     clockwise from 12 o'clock as time runs out."""
 
-    def __init__(self, parent=None, size=240, thickness=12, text_dy=0.0):
+    def __init__(self, parent=None, size=240, thickness=12, text_dy=0.0,
+                 label_dy=-0.17):
         super().__init__(parent)
         self.setFixedSize(size, size)
         self._thickness = thickness
-        self._text_dy = text_dy  # shifts the text vertically (fraction of size)
+        self._text_dy = text_dy    # shifts the time text (fraction of size)
+        self._label_dy = label_dy  # label position relative to the time text
         self._progress = 1.0
         self._text = ""
         self._label = ""
@@ -87,10 +89,11 @@ class RingTimer(QWidget):
         p.setPen(QColor("#f8fafc"))
         p.drawText(QRectF(0, dy, w, w), Qt.AlignCenter, self._text)
 
-        # label above the time
+        # label (FOCUS / BREAK / READY)
         font.setPixelSize(max(10, int(w * 0.06)))
         font.setBold(True)
         font.setLetterSpacing(QFont.AbsoluteSpacing, 2)
         p.setFont(font)
         p.setPen(self._color)
-        p.drawText(QRectF(0, dy - w * 0.17, w, w), Qt.AlignCenter, self._label)
+        p.drawText(QRectF(0, dy + w * self._label_dy, w, w), Qt.AlignCenter,
+                   self._label)
