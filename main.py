@@ -72,7 +72,7 @@ def main():
             dialog = SettingsDialog(
                 current, Settings(),
                 parent=window if window.is_shown() else None)
-            if dialog.exec() != dialog.Accepted:
+            if dialog.exec() != dialog.accepted:
                 return
             new = dialog.result_settings()
             new.save()
