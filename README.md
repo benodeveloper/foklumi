@@ -1,0 +1,178 @@
+# Foklumi
+
+A Pomodoro-style focus timer that turns every break into a short German vocabulary lesson.
+
+**Version:** 0.1.0-beta
+
+- **Focus:** 45-minute countdown (configurable).
+- **Break:** a 2-minute break starts automatically (configurable). There is no long break.
+- **Locked screen:** during the break a fullscreen overlay covers every monitor. On X11 it also grabs the keyboard and mouse.
+- **One word per break:** the German word, its English translation, a plain-English explanation, an example sentence in German and its English translation.
+- **Listen buttons:** hear the word and the sentence spoken aloud with [Piper](https://github.com/rhasspy/piper) (natural voice), with fallbacks to espeak-ng, macOS `say` and Windows SAPI.
+- **Floating round timer:** a draggable, always-on-top circular timer with a clock-style progress ring.
+- **Settings:** timing, colors, timer size, speech speed, vocabulary file and more, saved to a JSON file.
+
+The bundled vocabulary is A1 level (18 words for now). You can point the app at your own list.
+
+## Platform support
+
+| Platform | Window cover | Keyboard/mouse lock |
+|---|---|---|
+| Linux, X11 (XFCE, etc.) | yes | yes |
+| Linux, Wayland | yes | no (Wayland does not allow it) |
+| Windows / macOS | yes | no |
+
+Developed and tested on Arch Linux with XFCE 4 on X11. Other platforms are untested in this beta.
+
+## Requirements
+
+- Python 3.11 or newer
+- PySide6 (installed from `requirements.txt`)
+- For speech (optional but recommended), on Linux: `piper-tts` and `aplay` (from `alsa-utils`), plus a German Piper voice such as `de_DE-thorsten-medium` (the `.onnx` file and its `.onnx.json` must sit side by side). Without Piper the app uses `espeak-ng` if installed.
+- On Arch, the packaged build also needs `xcb-util-cursor` for the Qt X11 plugin.
+
+## Run from source
+
+```bash
+git clone <your-repo-url> foklumi && cd foklumi
+python -m venv .venv
+source .venv/bin/activate          # fish: source .venv/bin/activate.fish
+pip install -r requirements.txt
+python main.py
+```
+
+Useful flags for testing:
+
+| Flag | Effect |
+|---|---|
+| `--fast` | 10 s focus and 15 s break, ignoring saved timing |
+| `--no-grab` | cover the screen but never grab keyboard and mouse |
+
+Run the tests with `python -m unittest discover -s tests -t . -v`.
+
+## Using the app
+
+- **Drag** the round timer to move it.
+- **Buttons:** ▶ start, ■ stop, » skip to the next phase.
+- **Right-click** the timer for **Settings…** and **Quit**.
+- **Emergency exit:** `Ctrl+Alt+Shift+Q` ends a break and stops the timer. All other keys are blocked during a locked break.
+- If you ever get stuck, switch to a text console with `Ctrl+Alt+F2`, log in and run `pkill -f main.py` (or `pkill -x foklumi` for the packaged build). Killing the process releases the grab.
+
+## Settings
+
+Open them from the right-click menu. They are stored in `~/.config/foklumi/settings.json` (on Windows `%APPDATA%\foklumi\settings.json`), outside the project folder.
+
+| Group | Options |
+|---|---|
+| Timing | focus minutes, break seconds, auto-start the next focus session |
+| Break screen | auto-speak, speech speed, lock keyboard and mouse, Piper model path |
+| Appearance | focus/break/idle colors, timer size, always on top |
+| Vocabulary | path to a custom vocabulary JSON file |
+
+Timing changes apply from the next phase. Everything else applies immediately.
+
+## Speech setup
+
+Set the German Piper model in **Settings → Break screen → Piper model**, or export it as an environment variable:
+
+```bash
+export PIPER_MODEL_DE=~/voices/de_DE-thorsten-medium.onnx
+```
+
+Check it works outside the app:
+
+```bash
+echo "Ich lerne jeden Tag Deutsch" | piper-tts -m ~/voices/de_DE-thorsten-medium.onnx --output-raw | aplay -q -t raw -f S16_LE -r 22050 -c 1
+```
+
+The terminal prints which engine is active when the app starts (`[speech] using piper`).
+
+## Custom vocabulary
+
+Provide a JSON file as a list of entries with exactly these fields:
+
+```json
+[
+  {
+    "german": "der Apfel",
+    "english": "apple",
+    "explanation": "A round fruit that grows on trees.",
+    "example_de": "Ich esse einen Apfel zum Frühstück.",
+    "example_en": "I eat an apple for breakfast."
+  }
+]
+```
+
+Words are shuffled and never repeat until the whole list has been shown. If the file is missing or broken, the app falls back to the built-in list and prints a warning.
+
+## Build a standalone app
+
+The build uses PyInstaller and produces a folder you can run without Python installed.
+
+```bash
+./build.sh
+```
+
+Output goes to `dist/foklumi/` plus a `.tar.gz` archive next to it. Run it with:
+
+```bash
+./dist/foklumi/foklumi
+```
+
+To install it for your user on Linux:
+
+```bash
+mkdir -p ~/.local/opt ~/.local/bin ~/.local/share/applications
+cp -r dist/foklumi ~/.local/opt/foklumi
+ln -sf ~/.local/opt/foklumi/foklumi ~/.local/bin/foklumi
+cp foklumi.desktop ~/.local/share/applications/
+```
+
+`~/.local/bin` must be in your `PATH`. In fish: `fish_add_path ~/.local/bin`.
+
+The build script is for Linux and macOS. On Windows, run PyInstaller directly and use `;` instead of `:` in `--add-data "data/vocab.json;data"`.
+
+## Project layout
+
+```
+foklumi/
+├── main.py                 # wires timer, vocabulary, speech and UI together
+├── core/
+│   ├── timer.py            # phase state machine (focus / break)
+│   ├── vocab.py            # vocabulary loading and shuffling
+│   └── settings.py         # settings load / save
+├── ui/
+│   ├── main_window.py      # floating round timer
+│   ├── ring.py             # the clock-style progress ring
+│   ├── break_overlay.py    # fullscreen break screen and input lock
+│   ├── settings_dialog.py  # settings window
+│   ├── speech.py           # Piper / espeak / say / SAPI wrapper
+│   └── util.py
+├── data/vocab.json         # built-in A1 vocabulary
+├── tests/
+├── requirements.txt
+├── build.sh
+└── foklumi.desktop
+```
+
+## Known limitations (beta)
+
+- No system tray icon, pause/resume or pre-break notification yet.
+- No autostart on login yet.
+- Only 18 built-in words.
+- The input lock only works on X11.
+- Piper loads its model on every phrase, so speech starts about a second after you press Listen.
+- Only tested on Arch Linux with XFCE on X11.
+
+## Roadmap
+
+- System tray icon with pause and resume
+- Notification 30 seconds before a break
+- XFCE / desktop autostart
+- Larger A1 word list, then A2 and B1
+- Keep a Piper process warm for instant speech
+- Packaging for Arch (PKGBUILD), Windows and macOS
+
+## License
+
+Choose a license before publishing (MIT is a common choice) and add a `LICENSE` file.
