@@ -4,9 +4,11 @@ from PySide6.QtWidgets import (QFrame, QLabel, QPushButton, QVBoxLayout,
                                QWidget)
 
 from core.vocab import Word
+from ui.ring import RingTimer
 from ui.util import format_time, is_x11
 
 EMERGENCY_MODS = Qt.ControlModifier | Qt.AltModifier | Qt.ShiftModifier
+BREAK_COLOR = "#34d399"
 
 
 class ScreenCover(QWidget):
@@ -39,8 +41,6 @@ class BreakOverlay(ScreenCover):
         super().__init__(screen)
         self.setStyleSheet("""
             QWidget { background-color: #0f172a; color: #e2e8f0; }
-            #title { font-size: 22px; color: #94a3b8; }
-            #countdown { font-size: 120px; font-weight: bold; color: #38bdf8; }
             #german { font-size: 64px; font-weight: bold; color: #f8fafc; }
             #english { font-size: 30px; color: #fbbf24; }
             #explanation { font-size: 22px; color: #cbd5e1; }
@@ -52,7 +52,9 @@ class BreakOverlay(ScreenCover):
             QPushButton:hover { background-color: #334155; }
         """)
 
-        self._countdown = self._label("countdown", "02:00")
+        ring_size = max(180, min(300, int(screen.geometry().height() * 0.28)))
+        self._ring = RingTimer(size=ring_size, thickness=ring_size // 18)
+
         self._german = self._label("german")
         self._english = self._label("english")
         self._explanation = self._label("explanation", wrap=True)
@@ -71,12 +73,10 @@ class BreakOverlay(ScreenCover):
         layout = QVBoxLayout(self)
         layout.setSpacing(12)
         layout.addStretch(2)
-        layout.addWidget(self._label("title", "BREAK TIME"),
-                         alignment=Qt.AlignHCenter)
-        layout.addWidget(self._countdown, alignment=Qt.AlignHCenter)
-        layout.addSpacing(16)
+        layout.addWidget(self._ring, alignment=Qt.AlignHCenter)
+        layout.addSpacing(12)
         layout.addWidget(line, alignment=Qt.AlignHCenter)
-        layout.addSpacing(16)
+        layout.addSpacing(12)
         layout.addWidget(self._german, alignment=Qt.AlignHCenter)
         layout.addWidget(btn_word, alignment=Qt.AlignHCenter)
         layout.addWidget(self._english, alignment=Qt.AlignHCenter)
@@ -104,8 +104,9 @@ class BreakOverlay(ScreenCover):
         button.clicked.connect(signal)
         return button
 
-    def set_countdown(self, seconds: int):
-        self._countdown.setText(format_time(seconds))
+    def set_countdown(self, remaining: int, total: int):
+        self._ring.set_state(remaining / max(1, total),
+                             format_time(remaining), "BREAK", BREAK_COLOR)
 
     def set_word(self, word: Word):
         self._german.setText(word.german)
@@ -130,18 +131,20 @@ class BreakScreen:
         self._use_grab = grab and is_x11()
         self._windows = []
         self._main = None
+        self._total = 1
         self._grab_timer = QTimer()
         self._grab_timer.setInterval(150)
         self._grab_timer.timeout.connect(self._try_grab)
 
     def show(self, word: Word, total_seconds: int, auto_speak: bool):
         self.hide()
+        self._total = max(1, total_seconds)
         primary = QGuiApplication.primaryScreen()
         for screen in QGuiApplication.screens():
             if screen == primary:
                 main = BreakOverlay(screen)
                 main.set_word(word)
-                main.set_countdown(total_seconds)
+                main.set_countdown(self._total, self._total)
                 main.speak_word.connect(
                     lambda: self._speaker.say(word.german))
                 main.speak_sentence.connect(
@@ -163,7 +166,7 @@ class BreakScreen:
     def update(self, remaining: int):
         if not self._main:
             return
-        self._main.set_countdown(remaining)
+        self._main.set_countdown(remaining, self._total)
         for window in self._windows:  # stay above popups, panels, etc.
             window.raise_()
 

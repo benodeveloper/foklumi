@@ -31,8 +31,12 @@ def main():
 
     overlay = BreakScreen(speaker, on_emergency=pomo.stop,
                           grab="--no-grab" not in sys.argv)
-    window = MainWindow(on_start=pomo.start, on_stop=pomo.stop,
-                        on_skip=pomo.skip)
+    window = MainWindow(
+        on_start=pomo.start, on_stop=pomo.stop, on_skip=pomo.skip,
+        on_quit=app.quit,
+        durations={Phase.FOCUS: pomo.focus_seconds,
+                   Phase.BREAK: pomo.break_seconds},
+    )
 
     def on_phase(phase: Phase):
         window.set_phase(phase)
