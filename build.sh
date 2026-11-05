@@ -23,6 +23,7 @@ rm -rf build dist
 pyinstaller --noconfirm --clean \
     --name foklumi \
     --add-data "data/vocab.json:data" \
+    --add-data "data/ATTRIBUTION.md:data" \
     main.py
 
 ARCHIVE="foklumi-${VERSION}-$(uname -s | tr '[:upper:]' '[:lower:]')-$(uname -m).tar.gz"

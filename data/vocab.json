@@ -1,0 +1,845 @@
+{
+  "schema": 2,
+  "words": [
+    {
+      "id": "apfel-noun",
+      "lemma": "Apfel",
+      "pos": "noun",
+      "level": "A1",
+      "english": "apple",
+      "explanation": "A round fruit that grows on trees. It is usually red, green or yellow.",
+      "examples": [
+        {
+          "de": "Ich esse einen Apfel zum Frühstück.",
+          "en": "I eat an apple for breakfast.",
+          "source": "curated"
+        }
+      ],
+      "noun": {
+        "article": "der",
+        "plural": "Äpfel",
+        "genitive": "Apfels"
+      }
+    },
+    {
+      "id": "wasser-noun",
+      "lemma": "Wasser",
+      "pos": "noun",
+      "level": "A1",
+      "english": "water",
+      "explanation": "The clear liquid we drink every day.",
+      "examples": [
+        {
+          "de": "Ich trinke jeden Tag viel Wasser.",
+          "en": "I drink a lot of water every day.",
+          "source": "curated"
+        }
+      ],
+      "noun": {
+        "article": "das",
+        "plural": "Wasser",
+        "genitive": "Wassers"
+      }
+    },
+    {
+      "id": "brot-noun",
+      "lemma": "Brot",
+      "pos": "noun",
+      "level": "A1",
+      "english": "bread",
+      "explanation": "A basic food made from flour and baked in an oven.",
+      "examples": [
+        {
+          "de": "Das Brot ist noch frisch.",
+          "en": "The bread is still fresh.",
+          "source": "curated"
+        }
+      ],
+      "noun": {
+        "article": "das",
+        "plural": "Brote",
+        "genitive": "Brotes"
+      }
+    },
+    {
+      "id": "haus-noun",
+      "lemma": "Haus",
+      "pos": "noun",
+      "level": "A1",
+      "english": "house",
+      "explanation": "A building where people live.",
+      "examples": [
+        {
+          "de": "Das Haus ist sehr groß.",
+          "en": "The house is very big.",
+          "source": "curated"
+        }
+      ],
+      "noun": {
+        "article": "das",
+        "plural": "Häuser",
+        "genitive": "Hauses"
+      }
+    },
+    {
+      "id": "buch-noun",
+      "lemma": "Buch",
+      "pos": "noun",
+      "level": "A1",
+      "english": "book",
+      "explanation": "Printed pages with a story or information, held together in a cover.",
+      "examples": [
+        {
+          "de": "Das Buch liegt auf dem Tisch.",
+          "en": "The book is lying on the table.",
+          "source": "curated"
+        }
+      ],
+      "noun": {
+        "article": "das",
+        "plural": "Bücher",
+        "genitive": "Buches"
+      }
+    },
+    {
+      "id": "stadt-noun",
+      "lemma": "Stadt",
+      "pos": "noun",
+      "level": "A1",
+      "english": "city / town",
+      "explanation": "A large place where many people live and work.",
+      "examples": [
+        {
+          "de": "Die Stadt ist am Abend sehr schön.",
+          "en": "The city is very beautiful in the evening.",
+          "source": "curated"
+        }
+      ],
+      "noun": {
+        "article": "die",
+        "plural": "Städte",
+        "genitive": "Stadt"
+      }
+    },
+    {
+      "id": "zeit-noun",
+      "lemma": "Zeit",
+      "pos": "noun",
+      "level": "A1",
+      "english": "time",
+      "explanation": "What we measure in seconds, minutes and hours.",
+      "examples": [
+        {
+          "de": "Hast du heute Zeit?",
+          "en": "Do you have time today?",
+          "source": "curated"
+        }
+      ],
+      "noun": {
+        "article": "die",
+        "plural": "Zeiten",
+        "genitive": "Zeit"
+      }
+    },
+    {
+      "id": "frage-noun",
+      "lemma": "Frage",
+      "pos": "noun",
+      "level": "A1",
+      "english": "question",
+      "explanation": "Something you ask when you want to know something.",
+      "examples": [
+        {
+          "de": "Ich habe eine Frage.",
+          "en": "I have a question.",
+          "source": "curated"
+        }
+      ],
+      "noun": {
+        "article": "die",
+        "plural": "Fragen",
+        "genitive": "Frage"
+      }
+    },
+    {
+      "id": "freund-noun",
+      "lemma": "Freund",
+      "pos": "noun",
+      "level": "A1",
+      "english": "friend (male)",
+      "explanation": "A person you like and trust. For a female friend, say \"die Freundin\".",
+      "examples": [
+        {
+          "de": "Mein Freund wohnt in Berlin.",
+          "en": "My friend lives in Berlin.",
+          "source": "curated"
+        }
+      ],
+      "noun": {
+        "article": "der",
+        "plural": "Freunde",
+        "genitive": "Freundes"
+      }
+    },
+    {
+      "id": "sein-verb",
+      "lemma": "sein",
+      "pos": "verb",
+      "level": "A1",
+      "english": "to be",
+      "explanation": "The basic verb for identity and states. It is irregular: ich bin, du bist, er ist.",
+      "examples": [
+        {
+          "de": "Ich bin müde.",
+          "en": "I am tired.",
+          "source": "curated"
+        }
+      ],
+      "verb": {
+        "auxiliary": "sein",
+        "separable": false,
+        "reflexive": false,
+        "participle": "gewesen",
+        "pronouns": [
+          "ich",
+          "du",
+          "er/sie/es",
+          "wir",
+          "ihr",
+          "sie/Sie"
+        ],
+        "tenses": {
+          "praesens": [
+            "bin",
+            "bist",
+            "ist",
+            "sind",
+            "seid",
+            "sind"
+          ],
+          "praeteritum": [
+            "war",
+            "warst",
+            "war",
+            "waren",
+            "wart",
+            "waren"
+          ],
+          "konjunktiv1": [
+            "sei",
+            "seist",
+            "sei",
+            "seien",
+            "seiet",
+            "seien"
+          ],
+          "konjunktiv2": [
+            "wäre",
+            "wärst",
+            "wäre",
+            "wären",
+            "wärt",
+            "wären"
+          ],
+          "perfekt": [
+            "bin gewesen",
+            "bist gewesen",
+            "ist gewesen",
+            "sind gewesen",
+            "seid gewesen",
+            "sind gewesen"
+          ],
+          "plusquamperfekt": [
+            "war gewesen",
+            "warst gewesen",
+            "war gewesen",
+            "waren gewesen",
+            "wart gewesen",
+            "waren gewesen"
+          ],
+          "futur1": [
+            "werde sein",
+            "wirst sein",
+            "wird sein",
+            "werden sein",
+            "werdet sein",
+            "werden sein"
+          ],
+          "futur2": [
+            "werde gewesen sein",
+            "wirst gewesen sein",
+            "wird gewesen sein",
+            "werden gewesen sein",
+            "werdet gewesen sein",
+            "werden gewesen sein"
+          ]
+        },
+        "imperative": {
+          "du": "sei",
+          "ihr": "seid",
+          "Sie": "seien Sie"
+        }
+      }
+    },
+    {
+      "id": "arbeiten-verb",
+      "lemma": "arbeiten",
+      "pos": "verb",
+      "level": "A1",
+      "english": "to work",
+      "explanation": "To do a job or a task, usually to earn money.",
+      "examples": [
+        {
+          "de": "Ich arbeite von Montag bis Freitag.",
+          "en": "I work from Monday to Friday.",
+          "source": "curated"
+        }
+      ],
+      "verb": {
+        "auxiliary": "haben",
+        "separable": false,
+        "reflexive": true,
+        "participle": "gearbeitet",
+        "pronouns": [
+          "ich",
+          "du",
+          "er/sie/es",
+          "wir",
+          "ihr",
+          "sie/Sie"
+        ],
+        "tenses": {
+          "praesens": [
+            "arbeite",
+            "arbeitest",
+            "arbeitet",
+            "arbeiten",
+            "arbeitet",
+            "arbeiten"
+          ],
+          "praeteritum": [
+            "arbeitete",
+            "arbeitetest",
+            "arbeitete",
+            "arbeiteten",
+            "arbeitetet",
+            "arbeiteten"
+          ],
+          "konjunktiv1": [
+            "arbeite",
+            "arbeitest",
+            "arbeite",
+            "arbeiten",
+            "arbeitet",
+            "arbeiten"
+          ],
+          "konjunktiv2": [
+            "arbeitete",
+            "arbeitetest",
+            "arbeitete",
+            "arbeiteten",
+            "arbeitetet",
+            "arbeiteten"
+          ],
+          "perfekt": [
+            "habe gearbeitet",
+            "hast gearbeitet",
+            "hat gearbeitet",
+            "haben gearbeitet",
+            "habt gearbeitet",
+            "haben gearbeitet"
+          ],
+          "plusquamperfekt": [
+            "hatte gearbeitet",
+            "hattest gearbeitet",
+            "hatte gearbeitet",
+            "hatten gearbeitet",
+            "hattet gearbeitet",
+            "hatten gearbeitet"
+          ],
+          "futur1": [
+            "werde arbeiten",
+            "wirst arbeiten",
+            "wird arbeiten",
+            "werden arbeiten",
+            "werdet arbeiten",
+            "werden arbeiten"
+          ],
+          "futur2": [
+            "werde gearbeitet haben",
+            "wirst gearbeitet haben",
+            "wird gearbeitet haben",
+            "werden gearbeitet haben",
+            "werdet gearbeitet haben",
+            "werden gearbeitet haben"
+          ]
+        },
+        "imperative": {
+          "du": "arbeite",
+          "ihr": "arbeitet",
+          "Sie": "arbeiten Sie"
+        }
+      }
+    },
+    {
+      "id": "lernen-verb",
+      "lemma": "lernen",
+      "pos": "verb",
+      "level": "A1",
+      "english": "to learn",
+      "explanation": "To get new knowledge or a new skill.",
+      "examples": [
+        {
+          "de": "Wir lernen heute Deutsch.",
+          "en": "We are learning German today.",
+          "source": "curated"
+        }
+      ],
+      "verb": {
+        "auxiliary": "haben",
+        "separable": false,
+        "reflexive": false,
+        "participle": "gelernt",
+        "pronouns": [
+          "ich",
+          "du",
+          "er/sie/es",
+          "wir",
+          "ihr",
+          "sie/Sie"
+        ],
+        "tenses": {
+          "praesens": [
+            "lerne",
+            "lernst",
+            "lernt",
+            "lernen",
+            "lernt",
+            "lernen"
+          ],
+          "praeteritum": [
+            "lernte",
+            "lerntest",
+            "lernte",
+            "lernten",
+            "lerntet",
+            "lernten"
+          ],
+          "konjunktiv1": [
+            "lerne",
+            "lernest",
+            "lerne",
+            "lernen",
+            "lernet",
+            "lernen"
+          ],
+          "konjunktiv2": [
+            "lernte",
+            "lerntest",
+            "lernte",
+            "lernten",
+            "lerntet",
+            "lernten"
+          ],
+          "perfekt": [
+            "habe gelernt",
+            "hast gelernt",
+            "hat gelernt",
+            "haben gelernt",
+            "habt gelernt",
+            "haben gelernt"
+          ],
+          "plusquamperfekt": [
+            "hatte gelernt",
+            "hattest gelernt",
+            "hatte gelernt",
+            "hatten gelernt",
+            "hattet gelernt",
+            "hatten gelernt"
+          ],
+          "futur1": [
+            "werde lernen",
+            "wirst lernen",
+            "wird lernen",
+            "werden lernen",
+            "werdet lernen",
+            "werden lernen"
+          ],
+          "futur2": [
+            "werde gelernt haben",
+            "wirst gelernt haben",
+            "wird gelernt haben",
+            "werden gelernt haben",
+            "werdet gelernt haben",
+            "werden gelernt haben"
+          ]
+        },
+        "imperative": {
+          "du": "lerne",
+          "ihr": "lernt",
+          "Sie": "lernen Sie"
+        }
+      }
+    },
+    {
+      "id": "wohnen-verb",
+      "lemma": "wohnen",
+      "pos": "verb",
+      "level": "A1",
+      "english": "to live (reside)",
+      "explanation": "To have your home in a certain place. It is not the same as \"leben\" (to be alive).",
+      "examples": [
+        {
+          "de": "Ich wohne in einer kleinen Wohnung.",
+          "en": "I live in a small apartment.",
+          "source": "curated"
+        }
+      ],
+      "verb": {
+        "auxiliary": "haben",
+        "separable": false,
+        "reflexive": false,
+        "participle": "gewohnt",
+        "pronouns": [
+          "ich",
+          "du",
+          "er/sie/es",
+          "wir",
+          "ihr",
+          "sie/Sie"
+        ],
+        "tenses": {
+          "praesens": [
+            "wohne",
+            "wohnst",
+            "wohnt",
+            "wohnen",
+            "wohnt",
+            "wohnen"
+          ],
+          "praeteritum": [
+            "wohnte",
+            "wohntest",
+            "wohnte",
+            "wohnten",
+            "wohntet",
+            "wohnten"
+          ],
+          "konjunktiv1": [
+            "wohne",
+            "wohnest",
+            "wohne",
+            "wohnen",
+            "wohnet",
+            "wohnen"
+          ],
+          "konjunktiv2": [
+            "wohnte",
+            "wohntest",
+            "wohnte",
+            "wohnten",
+            "wohntet",
+            "wohnten"
+          ],
+          "perfekt": [
+            "habe gewohnt",
+            "hast gewohnt",
+            "hat gewohnt",
+            "haben gewohnt",
+            "habt gewohnt",
+            "haben gewohnt"
+          ],
+          "plusquamperfekt": [
+            "hatte gewohnt",
+            "hattest gewohnt",
+            "hatte gewohnt",
+            "hatten gewohnt",
+            "hattet gewohnt",
+            "hatten gewohnt"
+          ],
+          "futur1": [
+            "werde wohnen",
+            "wirst wohnen",
+            "wird wohnen",
+            "werden wohnen",
+            "werdet wohnen",
+            "werden wohnen"
+          ],
+          "futur2": [
+            "werde gewohnt haben",
+            "wirst gewohnt haben",
+            "wird gewohnt haben",
+            "werden gewohnt haben",
+            "werdet gewohnt haben",
+            "werden gewohnt haben"
+          ]
+        },
+        "imperative": {
+          "du": "wohne",
+          "ihr": "wohnt",
+          "Sie": "wohnen Sie"
+        }
+      }
+    },
+    {
+      "id": "brauchen-verb",
+      "lemma": "brauchen",
+      "pos": "verb",
+      "level": "A1",
+      "english": "to need",
+      "explanation": "To require something because you cannot do without it.",
+      "examples": [
+        {
+          "de": "Ich brauche einen Stift.",
+          "en": "I need a pen.",
+          "source": "curated"
+        }
+      ],
+      "verb": {
+        "auxiliary": "haben",
+        "separable": false,
+        "reflexive": false,
+        "participle": "gebraucht",
+        "pronouns": [
+          "ich",
+          "du",
+          "er/sie/es",
+          "wir",
+          "ihr",
+          "sie/Sie"
+        ],
+        "tenses": {
+          "praesens": [
+            "brauche",
+            "brauchst",
+            "braucht",
+            "brauchen",
+            "braucht",
+            "brauchen"
+          ],
+          "praeteritum": [
+            "brauchte",
+            "brauchtest",
+            "brauchte",
+            "brauchten",
+            "brauchtet",
+            "brauchten"
+          ],
+          "konjunktiv1": [
+            "brauche",
+            "brauchest",
+            "brauche",
+            "brauchen",
+            "brauchet",
+            "brauchen"
+          ],
+          "konjunktiv2": [
+            "brauchte",
+            "brauchtest",
+            "brauchte",
+            "brauchten",
+            "brauchtet",
+            "brauchten"
+          ],
+          "perfekt": [
+            "habe gebraucht",
+            "hast gebraucht",
+            "hat gebraucht",
+            "haben gebraucht",
+            "habt gebraucht",
+            "haben gebraucht"
+          ],
+          "plusquamperfekt": [
+            "hatte gebraucht",
+            "hattest gebraucht",
+            "hatte gebraucht",
+            "hatten gebraucht",
+            "hattet gebraucht",
+            "hatten gebraucht"
+          ],
+          "futur1": [
+            "werde brauchen",
+            "wirst brauchen",
+            "wird brauchen",
+            "werden brauchen",
+            "werdet brauchen",
+            "werden brauchen"
+          ],
+          "futur2": [
+            "werde gebraucht haben",
+            "wirst gebraucht haben",
+            "wird gebraucht haben",
+            "werden gebraucht haben",
+            "werdet gebraucht haben",
+            "werden gebraucht haben"
+          ]
+        },
+        "imperative": {
+          "du": "brauche",
+          "ihr": "braucht",
+          "Sie": "brauchen Sie"
+        }
+      }
+    },
+    {
+      "id": "kaufen-verb",
+      "lemma": "kaufen",
+      "pos": "verb",
+      "level": "A1",
+      "english": "to buy",
+      "explanation": "To give money and get something in return.",
+      "examples": [
+        {
+          "de": "Ich kaufe Milch im Supermarkt.",
+          "en": "I buy milk at the supermarket.",
+          "source": "curated"
+        }
+      ],
+      "verb": {
+        "auxiliary": "haben",
+        "separable": false,
+        "reflexive": false,
+        "participle": "gekauft",
+        "pronouns": [
+          "ich",
+          "du",
+          "er/sie/es",
+          "wir",
+          "ihr",
+          "sie/Sie"
+        ],
+        "tenses": {
+          "praesens": [
+            "kaufe",
+            "kaufst",
+            "kauft",
+            "kaufen",
+            "kauft",
+            "kaufen"
+          ],
+          "praeteritum": [
+            "kaufte",
+            "kauftest",
+            "kaufte",
+            "kauften",
+            "kauftet",
+            "kauften"
+          ],
+          "konjunktiv1": [
+            "kaufe",
+            "kaufest",
+            "kaufe",
+            "kaufen",
+            "kaufet",
+            "kaufen"
+          ],
+          "konjunktiv2": [
+            "kaufte",
+            "kauftest",
+            "kaufte",
+            "kauften",
+            "kauftet",
+            "kauften"
+          ],
+          "perfekt": [
+            "habe gekauft",
+            "hast gekauft",
+            "hat gekauft",
+            "haben gekauft",
+            "habt gekauft",
+            "haben gekauft"
+          ],
+          "plusquamperfekt": [
+            "hatte gekauft",
+            "hattest gekauft",
+            "hatte gekauft",
+            "hatten gekauft",
+            "hattet gekauft",
+            "hatten gekauft"
+          ],
+          "futur1": [
+            "werde kaufen",
+            "wirst kaufen",
+            "wird kaufen",
+            "werden kaufen",
+            "werdet kaufen",
+            "werden kaufen"
+          ],
+          "futur2": [
+            "werde gekauft haben",
+            "wirst gekauft haben",
+            "wird gekauft haben",
+            "werden gekauft haben",
+            "werdet gekauft haben",
+            "werden gekauft haben"
+          ]
+        },
+        "imperative": {
+          "du": "kaufe",
+          "ihr": "kauft",
+          "Sie": "kaufen Sie"
+        }
+      }
+    },
+    {
+      "id": "müde-adj",
+      "lemma": "müde",
+      "pos": "adj",
+      "level": "A1",
+      "english": "tired",
+      "explanation": "The feeling you have when you need sleep or rest.",
+      "examples": [
+        {
+          "de": "Nach der Arbeit bin ich müde.",
+          "en": "After work I am tired.",
+          "source": "curated"
+        }
+      ]
+    },
+    {
+      "id": "schnell-adj",
+      "lemma": "schnell",
+      "pos": "adj",
+      "level": "A1",
+      "english": "fast / quickly",
+      "explanation": "Moving or happening with high speed. The opposite is \"langsam\" (slow).",
+      "examples": [
+        {
+          "de": "Der Zug ist sehr schnell.",
+          "en": "The train is very fast.",
+          "source": "curated"
+        }
+      ]
+    },
+    {
+      "id": "spät-adj",
+      "lemma": "spät",
+      "pos": "adj",
+      "level": "A1",
+      "english": "late",
+      "explanation": "After the expected or normal time.",
+      "examples": [
+        {
+          "de": "Es ist schon spät.",
+          "en": "It is already late.",
+          "source": "curated"
+        }
+      ]
+    },
+    {
+      "id": "gern-adv",
+      "lemma": "gern",
+      "pos": "adv",
+      "level": "A1",
+      "english": "gladly / with pleasure",
+      "explanation": "Put it after a verb to say you like doing something.",
+      "examples": [
+        {
+          "de": "Ich trinke gern Tee.",
+          "en": "I like drinking tea.",
+          "source": "curated"
+        }
+      ]
+    }
+  ]
+}

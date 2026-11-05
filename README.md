@@ -13,7 +13,7 @@ A Pomodoro-style focus timer that turns every break into a short German vocabula
 - **Floating round timer:** a draggable, always-on-top circular timer with a clock-style progress ring.
 - **Settings:** timing, colors, timer size, speech speed, vocabulary file and more, saved to a JSON file.
 
-The bundled vocabulary is A1 level (18 words for now). You can point the app at your own list.
+The bundled vocabulary is a curated A1 list (19 words for now) with noun and verb grammar generated from [Kaikki](https://kaikki.org/). You can point the app at your own list.
 
 ## Platform support
 
@@ -91,21 +91,57 @@ The terminal prints which engine is active when the app starts (`[speech] using 
 
 ## Custom vocabulary
 
-Provide a JSON file as a list of entries with exactly these fields:
+Point **Settings → Vocabulary** at a JSON file. The file must use schema 2:
 
 ```json
-[
-  {
-    "german": "der Apfel",
-    "english": "apple",
-    "explanation": "A round fruit that grows on trees.",
-    "example_de": "Ich esse einen Apfel zum Frühstück.",
-    "example_en": "I eat an apple for breakfast."
-  }
-]
+{
+  "schema": 2,
+  "words": [
+    {
+      "id": "apfel-noun",
+      "lemma": "Apfel",
+      "pos": "noun",
+      "level": "A1",
+      "english": "apple",
+      "explanation": "A round fruit that grows on trees.",
+      "examples": [
+        {
+          "de": "Ich esse einen Apfel zum Frühstück.",
+          "en": "I eat an apple for breakfast.",
+          "source": "curated"
+        }
+      ],
+      "noun": {
+        "article": "der",
+        "plural": "Äpfel",
+        "genitive": "Apfels"
+      }
+    }
+  ]
+}
 ```
 
+`pos` is `noun`, `verb`, `adj`, or `adv`. The `noun` and `verb` blocks are optional; without them the word still appears, but its grammar section is omitted. A `verb` block contains `auxiliary`, `separable`, `reflexive`, `participle`, `pronouns`, `tenses`, and `imperative` — see `data/vocab.json` for a complete example.
+
 Words are shuffled and never repeat until the whole list has been shown. If the file is missing or broken, the app falls back to the built-in list and prints a warning.
+
+## Rebuilding the bundled vocabulary
+
+The learner-facing text lives in `data/curated_words.json`. Noun and verb grammar is generated from [Kaikki](https://kaikki.org/), and Tatoeba is used only as an example fallback for words without a curated sentence.
+
+```bash
+# One-time download: Kaikki (~1 GB) and Tatoeba into tools/
+python tools/download_data.py
+
+# Regenerate data/vocab.json and validate it
+python tools/build_pipeline.py
+```
+
+The build refuses to write `data/vocab.json` if a noun lacks a definite article, a verb lacks its present tense, participle or auxiliary, or an entry has no translation. Less critical gaps are printed as warnings.
+
+## Data attribution
+
+The bundled vocabulary is built from Wiktionary data via [Kaikki](https://kaikki.org/) and, when needed, example sentences from [Tatoeba](https://tatoeba.org/). See `data/ATTRIBUTION.md` for the licenses and attribution details.
 
 ## Build a standalone app
 
@@ -132,7 +168,7 @@ cp foklumi.desktop ~/.local/share/applications/
 
 `~/.local/bin` must be in your `PATH`. In fish: `fish_add_path ~/.local/bin`.
 
-The build script is for Linux and macOS. On Windows, run PyInstaller directly and use `;` instead of `:` in `--add-data "data/vocab.json;data"`.
+The build script is for Linux and macOS. On Windows, run PyInstaller directly and use `;` instead of `:` in the `--add-data` paths.
 
 ## Project layout
 
@@ -150,7 +186,13 @@ foklumi/
 │   ├── settings_dialog.py  # settings window
 │   ├── speech.py           # Piper / espeak / say / SAPI wrapper
 │   └── util.py
-├── data/vocab.json         # built-in A1 vocabulary
+├── data/
+│   ├── curated_words.json  # hand-written translations, explanations, examples
+│   ├── vocab.json          # built-in A1 vocabulary (generated)
+│   └── ATTRIBUTION.md      # data sources and licenses
+├── tools/
+│   ├── download_data.py    # fetch Kaikki and Tatoeba
+│   └── build_pipeline.py   # generate and validate vocab.json
 ├── tests/
 ├── requirements.txt
 ├── build.sh
@@ -159,16 +201,16 @@ foklumi/
 
 ## Known limitations (beta)
 
-- No system tray icon, pause/resume or pre-break notification yet.
+- No system tray icon or pre-break notification yet.
 - No autostart on login yet.
-- Only 18 built-in words.
+- Only 19 built-in words.
 - The input lock only works on X11.
 - Piper loads its model on every phrase, so speech starts about a second after you press Listen.
 - Only tested on Arch Linux with XFCE on X11.
 
 ## Roadmap
 
-- System tray icon with pause and resume
+- System tray icon
 - Notification 30 seconds before a break
 - XFCE / desktop autostart
 - Larger A1 word list, then A2 and B1
