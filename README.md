@@ -55,7 +55,7 @@ Run the tests with `python -m unittest discover -s tests -t . -v`.
 - **Drag** the round timer to move it.
 - **Buttons:** ▶ start, ■ stop, » skip to the next phase.
 - **Right-click** the timer for **Settings…** and **Quit**.
-- **Emergency exit:** `Ctrl+Alt+Shift+Q` ends a break and stops the timer. All other keys are blocked during a locked break.
+- **Emergency exit:** `Esc` ends a break and stops the timer. You can choose a different key in **Settings → Break screen → Emergency exit**. All other keys are blocked during a locked break.
 - If you ever get stuck, switch to a text console with `Ctrl+Alt+F2`, log in and run `pkill -f main.py` (or `pkill -x foklumi` for the packaged build). Killing the process releases the grab.
 
 ## Settings
@@ -65,7 +65,7 @@ Open them from the right-click menu. They are stored in `~/.config/foklumi/setti
 | Group | Options |
 |---|---|
 | Timing | focus minutes, break seconds, auto-start the next focus session |
-| Break screen | auto-speak, speech speed, lock keyboard and mouse, Piper model path |
+| Break screen | auto-speak, speech speed, lock keyboard and mouse, emergency exit key, Piper model path |
 | Appearance | focus/break/idle colors, timer size, always on top |
 | Vocabulary | path to a custom vocabulary JSON file |
 

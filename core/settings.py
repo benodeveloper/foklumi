@@ -41,6 +41,7 @@ class Settings:
     auto_speak: bool = True
     speech_speed: float = 1.0        # Piper length-scale: bigger = slower
     lock_input: bool = True
+    emergency_key: str = "Esc"       # key sequence that ends a break
     # appearance
     focus_color: str = "#38bdf8"
     break_color: str = "#34d399"

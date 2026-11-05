@@ -1,11 +1,11 @@
 from dataclasses import replace
 
-from PySide6.QtGui import QColor
+from PySide6.QtGui import QColor, QKeySequence
 from PySide6.QtWidgets import (QCheckBox, QColorDialog, QDialog,
                                QDialogButtonBox, QDoubleSpinBox, QFileDialog,
-                               QFormLayout, QHBoxLayout, QLabel, QLineEdit,
-                               QPushButton, QSpinBox, QTabWidget, QVBoxLayout,
-                               QWidget)
+                               QFormLayout, QHBoxLayout, QKeySequenceEdit,
+                               QLabel, QLineEdit, QPushButton, QSpinBox,
+                               QTabWidget, QVBoxLayout, QWidget)
 
 from core.settings import Settings
 
@@ -83,14 +83,22 @@ class SettingsDialog(QDialog):
         self.speed.setSingleStep(0.1)
         self.lock = QCheckBox("Lock keyboard and mouse during breaks (X11 only)")
         self.model = PathEdit("", "Piper model (*.onnx);;All files (*)")
+        self.emergency = QKeySequenceEdit()
+        self.emergency.setMaximumSequenceLength(1)
         speed_note = QLabel("Speed: 1.0 is normal, higher is slower.")
         speed_note.setStyleSheet("color: gray;")
+        key_note = QLabel("Key that ends a break, for example Esc or "
+                          "Ctrl+Alt+Shift+Q. Press it in the field above.")
+        key_note.setWordWrap(True)
+        key_note.setStyleSheet("color: gray;")
         brk = QFormLayout()
         brk.addRow("", self.auto_speak)
         brk.addRow("Speech speed", self.speed)
         brk.addRow("", speed_note)
         brk.addRow("Piper model", self.model)
         brk.addRow("", self.lock)
+        brk.addRow("Emergency exit", self.emergency)
+        brk.addRow("", key_note)
 
         # ----- appearance -----
         self.c_focus = ColorButton(current.focus_color)
@@ -150,6 +158,7 @@ class SettingsDialog(QDialog):
         self.speed.setValue(s.speech_speed)
         self.lock.setChecked(s.lock_input)
         self.model.edit.setText(s.piper_model)
+        self.emergency.setKeySequence(QKeySequence(s.emergency_key))
         self.c_focus.set_color(s.focus_color)
         self.c_break.set_color(s.break_color)
         self.c_idle.set_color(s.idle_color)
@@ -159,6 +168,8 @@ class SettingsDialog(QDialog):
         self.vocab.edit.setText(s.vocab_path)
 
     def _accept(self):
+        emergency_key = self.emergency.keySequence().toString(
+            QKeySequence.SequenceFormat.PortableText) or "Esc"
         s = replace(
             self._result,
             focus_minutes=self.focus.value(),
@@ -167,6 +178,7 @@ class SettingsDialog(QDialog):
             auto_speak=self.auto_speak.isChecked(),
             speech_speed=self.speed.value(),
             lock_input=self.lock.isChecked(),
+            emergency_key=emergency_key,
             piper_model=self.model.text(),
             focus_color=self.c_focus.color(),
             break_color=self.c_break.color(),

@@ -16,11 +16,13 @@ class SettingsTests(unittest.TestCase):
     def test_missing_file_gives_defaults(self):
         s = Settings.load(self.path)
         self.assertEqual((s.focus_minutes, s.break_seconds), (45, 120))
+        self.assertEqual(s.emergency_key, "Esc")
 
     def test_roundtrip_keeps_every_type(self):
         original = Settings(focus_minutes=25, break_seconds=90,
                             focus_color="#ff0000", lock_input=False,
                             auto_speak=False, speech_speed=1.3,
+                            emergency_key="Ctrl+Alt+Shift+Q",
                             start_in_background=True,
                             vocab_path="/tmp/my words, v2.json")
         original.save(self.path)

@@ -1,13 +1,23 @@
-from PySide6.QtCore import QTimer, Qt, Signal
-from PySide6.QtGui import QGuiApplication
-from PySide6.QtWidgets import (QFrame, QGridLayout, QHBoxLayout, QLabel,
-                               QPushButton, QVBoxLayout, QWidget)
+from PySide6.QtCore import QEvent, QObject, QTimer, Qt, Signal
+from PySide6.QtGui import QGuiApplication, QKeySequence
+from PySide6.QtWidgets import (QApplication, QFrame, QGridLayout, QHBoxLayout,
+                               QLabel, QPushButton, QVBoxLayout, QWidget)
 
 from core.vocab import NounInfo, VerbInfo, Word
 from ui.ring import RingTimer
 from ui.util import format_time, is_x11
 
-EMERGENCY_MODS = Qt.ControlModifier | Qt.AltModifier | Qt.ShiftModifier
+
+def parse_emergency_key(text: str) -> QKeySequence:
+    """Turn a stored key sequence into one key combination, falling back to
+    Escape when the value is empty or invalid."""
+    sequence = QKeySequence.fromString(
+        text, QKeySequence.SequenceFormat.PortableText)
+    if sequence.count():
+        single = QKeySequence(sequence[0])
+        if single.toString(QKeySequence.SequenceFormat.PortableText):
+            return single
+    return QKeySequence(Qt.Key_Escape)
 
 
 class VerbView(QWidget):
@@ -143,7 +153,6 @@ class ScreenCover(QWidget):
 class BreakOverlay(ScreenCover):
     speak_word = Signal()
     speak_sentence = Signal()
-    emergency = Signal()
 
     def __init__(self, screen):
         super().__init__(screen)
@@ -241,30 +250,40 @@ class BreakOverlay(ScreenCover):
         self._example_de.setText(f"“{word.example_de}”")
         self._example_en.setText(word.example_en)
 
-    def keyPressEvent(self, event):
-        is_q = event.key() == Qt.Key_Q
-        if is_q and (event.modifiers() & EMERGENCY_MODS) == EMERGENCY_MODS:
-            self.emergency.emit()
 
-
-class BreakScreen:
+class BreakScreen(QObject):
     """Covers every monitor, grabs input on X11 (if enabled), shows one word."""
 
     def __init__(self, speaker, on_emergency, settings):
+        super().__init__()
         self._speaker = speaker
         self._on_emergency = on_emergency
         self._use_grab = False
         self._color = settings.break_color
+        self._emergency_key = parse_emergency_key(settings.emergency_key)
         self._windows = []
         self._main = None
         self._total = 1
         self._grab_timer = QTimer()
         self._grab_timer.setInterval(150)
         self._grab_timer.timeout.connect(self._try_grab)
+        app = QApplication.instance()
+        if app:
+            app.installEventFilter(self)
         self.configure(settings, allow_grab=True)
+
+    def eventFilter(self, obj, event):
+        """Catch the emergency key even when a child widget (or another app
+        window) has keyboard focus."""
+        if (self._windows and event.type() == QEvent.Type.KeyPress
+                and QKeySequence(event.keyCombination()) == self._emergency_key):
+            QTimer.singleShot(0, self._on_emergency)
+            return True
+        return super().eventFilter(obj, event)
 
     def configure(self, settings, allow_grab=True):
         self._color = settings.break_color
+        self._emergency_key = parse_emergency_key(settings.emergency_key)
         self._use_grab = allow_grab and settings.lock_input and is_x11()
 
     def show(self, word: Word, total_seconds: int, auto_speak: bool):
@@ -280,18 +299,28 @@ class BreakScreen:
                     lambda: self._speaker.say(word.german))
                 main.speak_sentence.connect(
                     lambda: self._speaker.say(word.example_de))
-                main.emergency.connect(
-                    lambda: QTimer.singleShot(0, self._on_emergency))
                 self._main = main
                 self._windows.append(main)
             else:
                 self._windows.append(ScreenCover(screen))
         for window in self._windows:
             window.present()
+        if self._main:
+            self._main.activateWindow()
+            self._main.setFocus(Qt.ActiveWindowFocusReason)
+            QTimer.singleShot(0, self._focus_main)
         if self._use_grab:
             self._grab_timer.start()
         if auto_speak:
             self._speaker.say([word.german, word.example_de])
+
+    def _focus_main(self):
+        """Take keyboard focus once the overlay is mapped. Without this the
+        X11 bypass window never receives key presses when input is not
+        grabbed (for example with --no-grab)."""
+        if self._main and self._main.isVisible():
+            self._main.activateWindow()
+            self._main.setFocus(Qt.ActiveWindowFocusReason)
 
     def update(self, remaining: int):
         if not self._main:
