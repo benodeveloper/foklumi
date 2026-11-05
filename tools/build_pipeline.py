@@ -22,6 +22,15 @@ PRONOUNS = ["ich", "du", "er/sie/es", "wir", "ihr", "sie/Sie"]
 PERSON_INDEX = {"first-person": 0, "second-person": 1, "third-person": 2}
 GENDER_TAGS = ("masculine", "feminine", "neuter")
 ARTICLE_BY_GENDER = {"masculine": "der", "feminine": "die", "neuter": "das"}
+BAD_SENSE_TAGS = {
+    "archaic", "dated", "dialectal", "misspelling", "nonstandard",
+    "obsolete", "rare",
+}
+BAD_FORM_TAGS = {
+    "alternative", "archaic", "auxiliary", "dated", "dialectal",
+    "inflection-template", "misspelling", "multiword-construction",
+    "nonstandard", "obsolete", "rare", "table-tags",
+}
 WERDEN = ["werde", "wirst", "wird", "werden", "werdet", "werden"]
 WUERDE = ["würde", "würdest", "würde", "würden", "würdet", "würden"]
 AUX_PRESENT = {
@@ -48,6 +57,17 @@ def _entry_tags(entry: dict) -> set:
     for sense in entry.get("senses", []):
         tags.update(sense.get("tags", []))
     return tags
+
+
+def _is_form_of_sense(sense: dict) -> bool:
+    tags = set(sense.get("tags", []))
+    return ("form-of" in tags or "alt-of" in tags
+            or bool(sense.get("form_of")) or bool(sense.get("alt_of")))
+
+
+def _is_quality_sense(sense: dict) -> bool:
+    return (not _is_form_of_sense(sense)
+            and not (_tags(sense) & BAD_SENSE_TAGS))
 
 
 def _slot(tags: Iterable[str]) -> Optional[int]:
@@ -237,9 +257,9 @@ def _pick_entry(entries: List[dict]) -> Optional[dict]:
 
     def score(entry: dict) -> tuple:
         senses = entry.get("senses", [])
-        first = senses[0].get("glosses", [""])[0] if senses else ""
-        form_of = any("form-of" in _tags(sense) for sense in senses)
-        return (bool(senses), not form_of, len(entry.get("forms", [])),
+        quality = [sense for sense in senses if _is_quality_sense(sense)]
+        first = quality[0].get("glosses", [""])[0] if quality else ""
+        return (bool(quality), len(quality), len(entry.get("forms", [])),
                 len(senses), -len(first))
 
     return max(entries, key=score)
@@ -292,10 +312,7 @@ def _match_forms(entry: dict, lemma: str) -> List[str]:
     forms = {lemma}
     for form in entry.get("forms", []):
         tags = _tags(form)
-        if tags & {"table-tags", "inflection-template",
-                   "multiword-construction", "auxiliary"}:
-            continue
-        if "infinitive-zu" in tags:
+        if tags & BAD_FORM_TAGS or "infinitive-zu" in tags:
             continue
         text = _clean(form.get("form", ""))
         if text and len(text) <= 40:
@@ -334,7 +351,7 @@ def _build_word(item: dict, entry: dict, sentences: List[dict],
         examples.append({
             "de": item["example_de"],
             "en": item["example_en"],
-            "source": "curated",
+            "source": item.get("example_source", "curated"),
         })
         used.add(item["example_de"])
     elif sentences:
