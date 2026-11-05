@@ -39,7 +39,8 @@ Developed and **tested only on Arch Linux** (maintainer’s current system: Arch
 ## Run from source
 
 ```bash
-git clone <your-repo-url> foklumi && cd foklumi
+git clone https://github.com/benodeveloper/foklumi.git
+cd foklumi
 python -m venv .venv
 source .venv/bin/activate          # fish: source .venv/bin/activate.fish
 pip install -r requirements.txt
@@ -233,6 +234,10 @@ foklumi/
 - Keep a Piper process warm for instant speech
 - Packaging for Arch (PKGBUILD), Windows and macOS
 
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md).
+
 ## License
 
-Choose a license before publishing (MIT is a common choice) and add a `LICENSE` file.
+[MIT](LICENSE). Bundled vocabulary data sources are documented in [data/ATTRIBUTION.md](data/ATTRIBUTION.md).
