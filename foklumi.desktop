@@ -1,0 +1,8 @@
+[Desktop Entry]
+Type=Application
+Name=Foklumi
+Comment=Pomodoro timer with German vocabulary breaks
+Exec=foklumi --background
+Terminal=false
+Categories=Education;Utility;
+X-GNOME-Autostart-enabled=true

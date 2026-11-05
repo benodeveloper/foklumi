@@ -212,8 +212,22 @@ class SettingsDialog(QDialog):
         self.on_top = QCheckBox("Keep the timer above other windows")
         self.background = QCheckBox(
             "Start hidden in the background (needs a system tray)")
+        self.run_at_login = QCheckBox("Run Foklumi when you log in")
+        self._autostart_supported = False
+        try:
+            from core import autostart
+            self._autostart_supported = autostart.supported()
+            self.run_at_login.setChecked(autostart.is_enabled())
+        except Exception:
+            self.run_at_login.setEnabled(False)
+        if not self._autostart_supported:
+            self.run_at_login.setEnabled(False)
+            self.run_at_login.setToolTip("Autostart is not supported on this platform.")
         bg_note = QLabel("Click the tray icon to show the timer again.")
         bg_note.setStyleSheet("color: gray;")
+        login_note = QLabel(
+            "Starts Foklumi in the background at login (Linux/Windows/macOS).")
+        login_note.setStyleSheet("color: gray;")
         look = QFormLayout()
         look.addRow("Focus color", self.c_focus)
         look.addRow("Break color", self.c_break)
@@ -222,6 +236,8 @@ class SettingsDialog(QDialog):
         look.addRow("", self.on_top)
         look.addRow("", self.background)
         look.addRow("", bg_note)
+        look.addRow("", self.run_at_login)
+        look.addRow("", login_note)
 
         # ----- vocabulary -----
         self.vocab = PathEdit("", "Vocabulary JSON (*.json);;All files (*)")
@@ -328,6 +344,18 @@ class SettingsDialog(QDialog):
             QMessageBox.warning(self, "Fetch candidates", message)
 
     def _accept(self):
+        if self._autostart_supported and self.run_at_login.isEnabled():
+            try:
+                from core import autostart
+                error = autostart.set_enabled(self.run_at_login.isChecked())
+                if error:
+                    QMessageBox.warning(
+                        self, "Foklumi",
+                        f"Could not update login autostart:\n{error}")
+            except Exception as e:
+                QMessageBox.warning(
+                    self, "Foklumi",
+                    f"Could not update login autostart:\n{e}")
         emergency_key = self.emergency.keySequence().toString(
             QKeySequence.SequenceFormat.PortableText) or "Esc"
         s = replace(

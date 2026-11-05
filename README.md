@@ -68,8 +68,8 @@ Open them from the right-click menu. They are stored in `~/.config/foklumi/setti
 |---|---|
 | Timing | focus minutes, break seconds, auto-start the next focus session |
 | Break screen | auto-speak, speech speed, lock keyboard and mouse, emergency exit key, Piper model path |
-| Appearance | focus/break/idle colors, timer size, always on top |
-| Vocabulary | path to a custom vocabulary JSON file |
+| Appearance | focus/break/idle colors, timer size, always on top, run at login |
+| Vocabulary | path to a custom vocabulary JSON file, fetch random candidates (Wiktionary/Kaikki/Tatoeba) |
 
 Timing changes apply from the next phase. Everything else applies immediately.
 
@@ -201,8 +201,7 @@ foklumi/
 
 ## Known limitations (beta)
 
-- No system tray icon or pre-break notification yet.
-- No autostart on login yet.
+- No pre-break notification yet.
 - Only 19 built-in words.
 - The input lock only works on X11.
 - Piper loads its model on every phrase, so speech starts about a second after you press Listen.
@@ -212,7 +211,6 @@ foklumi/
 
 - System tray icon
 - Notification 30 seconds before a break
-- XFCE / desktop autostart
 - Larger A1 word list, then A2 and B1
 - Keep a Piper process warm for instant speech
 - Packaging for Arch (PKGBUILD), Windows and macOS
