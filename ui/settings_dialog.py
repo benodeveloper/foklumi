@@ -1,11 +1,13 @@
 from dataclasses import replace
+from pathlib import Path
 
+from PySide6.QtCore import QObject, QThread, Signal
 from PySide6.QtGui import QColor, QKeySequence
-from PySide6.QtWidgets import (QCheckBox, QColorDialog, QDialog,
+from PySide6.QtWidgets import (QCheckBox, QColorDialog, QComboBox, QDialog,
                                QDialogButtonBox, QDoubleSpinBox, QFileDialog,
                                QFormLayout, QHBoxLayout, QKeySequenceEdit,
-                               QLabel, QLineEdit, QPushButton, QSpinBox,
-                               QTabWidget, QVBoxLayout, QWidget)
+                               QLabel, QLineEdit, QMessageBox, QPushButton,
+                               QSpinBox, QTabWidget, QVBoxLayout, QWidget)
 
 from core.settings import Settings
 
@@ -53,6 +55,107 @@ class PathEdit(QWidget):
 
     def text(self) -> str:
         return self.edit.text().strip()
+
+
+class FetchCandidatesWorker(QObject):
+    progress = Signal(str)
+    finished = Signal(bool, str)
+
+    def __init__(self, count: int, pos: str, output: Path,
+                 allow_missing_examples: bool):
+        super().__init__()
+        self._count = count
+        self._pos = pos
+        self._output = output
+        self._allow_missing = allow_missing_examples
+
+    def run(self):
+        try:
+            import json
+            import time
+            import requests
+            from tools.fetch_random_words import (
+                DEFAULT_CURATED, DEFAULT_KAIKKI, DEFAULT_TATOEBA,
+                USER_AGENT, _distribute_counts, _valid_title,
+                build_candidate, build_sentence_index, fetch_random_titles,
+                load_curated, load_kaikki_titles, load_tatoeba)
+        except Exception as e:
+            self.finished.emit(False, f"Missing dependency or import error: {e}")
+            return
+
+        if not DEFAULT_KAIKKI.exists():
+            self.finished.emit(
+                False, f"Missing {DEFAULT_KAIKKI}.\nRun tools/download_data.py first.")
+            return
+        curated = load_curated(DEFAULT_CURATED)
+        existing_keys = {(w["lemma"].lower(), w["pos"]) for w in curated}
+        sentences = load_tatoeba(DEFAULT_TATOEBA)
+        if not sentences and not self._allow_missing:
+            self.finished.emit(
+                False,
+                f"Missing or empty {DEFAULT_TATOEBA}.\nRun tools/download_data.py "
+                "first, or enable 'Allow missing examples'.")
+            return
+        sentence_index = build_sentence_index(sentences) if sentences else None
+        pos_list = [p.strip() for p in self._pos.split(",") if p.strip()]
+        desired = _distribute_counts(self._count, pos_list)
+        buckets = {pos: [] for pos in pos_list}
+        seen_titles = set()
+        used_examples = set()
+        session = requests.Session()
+        session.headers.update({"User-Agent": USER_AGENT})
+
+        try:
+            for batch in range(1, 11):
+                titles = fetch_random_titles(session, 500, 30)
+                new_titles = []
+                for title in titles:
+                    key = title.lower()
+                    if key in seen_titles:
+                        continue
+                    seen_titles.add(key)
+                    if _valid_title(title):
+                        new_titles.append(title)
+                if new_titles:
+                    entries_by_title = load_kaikki_titles(
+                        DEFAULT_KAIKKI, {t.lower() for t in new_titles})
+                    for title in new_titles:
+                        entries = entries_by_title.get(title.lower(), [])
+                        if not entries:
+                            continue
+                        for pos in pos_list:
+                            if len(buckets[pos]) >= desired[pos]:
+                                continue
+                            candidate = build_candidate(
+                                title, entries, pos, sentences, used_examples,
+                                existing_keys, self._allow_missing,
+                                sentence_index=sentence_index)
+                            if candidate:
+                                buckets[pos].append(candidate)
+                progress = ", ".join(
+                    f"{pos}: {len(buckets[pos])}/{desired[pos]}" for pos in pos_list)
+                self.progress.emit(f"Batch {batch}/10 — {progress}")
+                if all(len(buckets[pos]) >= desired[pos] for pos in pos_list):
+                    break
+                time.sleep(0.5)
+        except Exception as e:
+            self.finished.emit(False, f"Fetch failed: {e}")
+            return
+
+        candidates = [c for pos in pos_list for c in buckets[pos]]
+        try:
+            self._output.parent.mkdir(parents=True, exist_ok=True)
+            with open(self._output, "w", encoding="utf-8") as f:
+                json.dump({"schema": 1, "source": "https://de.wiktionary.org/",
+                           "words": candidates}, f, indent=2, ensure_ascii=False)
+                f.write("\n")
+        except OSError as e:
+            self.finished.emit(False, f"Could not write {self._output}: {e}")
+            return
+        msg = f"Wrote {len(candidates)} candidates to {self._output}."
+        if len(candidates) < self._count:
+            msg += f"\nOnly found {len(candidates)} of {self._count} requested."
+        self.finished.emit(True, msg)
 
 
 class SettingsDialog(QDialog):
@@ -126,9 +229,36 @@ class SettingsDialog(QDialog):
                        "the same format as data/vocab.json.")
         vnote.setWordWrap(True)
         vnote.setStyleSheet("color: gray;")
+        self.fetch_count = QSpinBox(); self.fetch_count.setRange(1, 200)
+        self.fetch_count.setValue(20)
+        self.fetch_pos = QComboBox()
+        self.fetch_pos.addItems([
+            "noun,verb,adj,adv", "noun,verb,adj", "noun", "verb", "adj", "adv"])
+        self.fetch_missing = QCheckBox("Allow candidates without example sentences")
+        self.fetch_button = QPushButton("Fetch random candidates…")
+        self.fetch_button.clicked.connect(self._start_fetch)
+        self.fetch_status = QLabel("")
+        self.fetch_status.setWordWrap(True)
+        self.fetch_status.setStyleSheet("color: gray;")
+        self._fetch_thread = None
+        self._fetch_worker = None
+        fetch_row = QHBoxLayout()
+        fetch_row.addWidget(self.fetch_count)
+        fetch_row.addWidget(self.fetch_pos)
+        fetch_row.addWidget(self.fetch_button)
+        fetch_note = QLabel(
+            "Downloads random German words from free/open sources (Wiktionary "
+            "API, local Kaikki/Tatoeba) into data/random_candidates.json for "
+            "review. Requires tools/download_data.py data. Runs in background.")
+        fetch_note.setWordWrap(True)
+        fetch_note.setStyleSheet("color: gray;")
         vocab = QFormLayout()
         vocab.addRow("Vocabulary file", self.vocab)
         vocab.addRow("", vnote)
+        vocab.addRow("Fetch count / POS", fetch_row)
+        vocab.addRow("", self.fetch_missing)
+        vocab.addRow("", self.fetch_status)
+        vocab.addRow("", fetch_note)
 
         tabs = QTabWidget()
         for title, form in (("Timing", timing), ("Break screen", brk),
@@ -166,6 +296,36 @@ class SettingsDialog(QDialog):
         self.on_top.setChecked(s.always_on_top)
         self.background.setChecked(s.start_in_background)
         self.vocab.edit.setText(s.vocab_path)
+
+    def _start_fetch(self):
+        if self._fetch_thread is not None and self._fetch_thread.isRunning():
+            return
+        try:
+            from tools.fetch_random_words import DEFAULT_OUTPUT
+        except Exception:
+            DEFAULT_OUTPUT = Path(__file__).resolve().parent.parent / "data" / "random_candidates.json"
+        self.fetch_button.setEnabled(False)
+        self.fetch_status.setText("Starting fetch…")
+        self._fetch_thread = QThread(self)
+        self._fetch_worker = FetchCandidatesWorker(
+            self.fetch_count.value(), self.fetch_pos.currentText(),
+            DEFAULT_OUTPUT, self.fetch_missing.isChecked())
+        self._fetch_worker.moveToThread(self._fetch_thread)
+        self._fetch_thread.started.connect(self._fetch_worker.run)
+        self._fetch_worker.progress.connect(self.fetch_status.setText)
+        self._fetch_worker.finished.connect(self._fetch_finished)
+        self._fetch_worker.finished.connect(self._fetch_thread.quit)
+        self._fetch_worker.finished.connect(self._fetch_worker.deleteLater)
+        self._fetch_thread.finished.connect(self._fetch_thread.deleteLater)
+        self._fetch_thread.start()
+
+    def _fetch_finished(self, ok: bool, message: str):
+        self.fetch_button.setEnabled(True)
+        self.fetch_status.setText(message if ok else f"Error: {message}")
+        if ok:
+            QMessageBox.information(self, "Fetch candidates", message)
+        else:
+            QMessageBox.warning(self, "Fetch candidates", message)
 
     def _accept(self):
         emergency_key = self.emergency.keySequence().toString(
