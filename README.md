@@ -2,7 +2,9 @@
 
 A Pomodoro-style focus timer that turns every break into a short German vocabulary lesson.
 
-**Version:** 0.1.0-beta
+[![Tests](https://github.com/benodeveloper/foklumi/actions/workflows/test.yml/badge.svg)](https://github.com/benodeveloper/foklumi/actions/workflows/test.yml)
+
+**Version:** 0.1.0-beta (first beta) — **tested only on Arch Linux** (maintainer’s current system: Arch Linux rolling, X11/XFCE).
 
 - **Focus:** 45-minute countdown (configurable).
 - **Break:** a 2-minute break starts automatically (configurable). There is no long break.
@@ -12,6 +14,8 @@ A Pomodoro-style focus timer that turns every break into a short German vocabula
 - **Listen buttons:** hear the word and the sentence spoken aloud with [Piper](https://github.com/rhasspy/piper) (natural voice), with fallbacks to espeak-ng, macOS `say` and Windows SAPI.
 - **Floating round timer:** a draggable, always-on-top circular timer with a clock-style progress ring.
 - **Settings:** timing, colors, timer size, speech speed, vocabulary file and more, saved to a JSON file.
+- **Run at login:** optional autostart (Linux/Windows/macOS).
+- **Fetch random words:** download random German candidates (noun/verb/adj/adv) from free/open sources (Wiktionary API + local Kaikki/Tatoeba) via **Settings → Vocabulary**.
 
 The bundled vocabulary is a curated A1 list (19 words for now) with noun and verb grammar generated from [Kaikki](https://kaikki.org/). You can point the app at your own list.
 
@@ -23,7 +27,7 @@ The bundled vocabulary is a curated A1 list (19 words for now) with noun and ver
 | Linux, Wayland | yes | no (Wayland does not allow it) |
 | Windows / macOS | yes | no |
 
-Developed and tested on Arch Linux with XFCE 4 on X11. Other platforms are untested in this beta.
+Developed and **tested only on Arch Linux** (maintainer’s current system: Arch Linux rolling, kernel 7.2.x, XFCE 4 on X11). Other platforms/desktops are untested in this beta.
 
 ## Requirements
 
@@ -143,6 +147,20 @@ The build refuses to write `data/vocab.json` if a noun lacks a definite article,
 
 The bundled vocabulary is built from Wiktionary data via [Kaikki](https://kaikki.org/) and, when needed, example sentences from [Tatoeba](https://tatoeba.org/). See `data/ATTRIBUTION.md` for the licenses and attribution details.
 
+## Releases
+
+Prebuilt Linux (x86_64) archives are attached to [GitHub Releases](https://github.com/benodeveloper/foklumi/releases) (tagged `v*`). The first beta tag is `v0.1.0-beta`.
+
+## Testing / CI
+
+Non-GUI unit tests run in GitHub Actions (`.github/workflows/test.yml`) on Python 3.11/3.12:
+
+```bash
+python -m unittest tests.test_timer tests.test_vocab tests.test_fetch_random tests.test_pipeline -v
+```
+
+Settings tests require `PySide6` (skipped automatically when it is not installed). Pushing a `v*` tag runs tests, builds the Linux archive, and publishes it to the GitHub Release (`.github/workflows/release.yml`).
+
 ## Build a standalone app
 
 The build uses PyInstaller and produces a folder you can run without Python installed.
@@ -205,7 +223,7 @@ foklumi/
 - Only 19 built-in words.
 - The input lock only works on X11.
 - Piper loads its model on every phrase, so speech starts about a second after you press Listen.
-- Only tested on Arch Linux with XFCE on X11.
+- **Tested only on Arch Linux** (Arch rolling, X11/XFCE) — the maintainer’s current system. Windows/macOS/Wayland and other distros are untested.
 
 ## Roadmap
 

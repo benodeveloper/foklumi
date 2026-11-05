@@ -2,7 +2,12 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from core.settings import Settings
+try:
+    from core.settings import Settings
+except ModuleNotFoundError as e:
+    if getattr(e, "name", "") == "PySide6" or "PySide6" in str(e):
+        raise unittest.SkipTest("PySide6 is required for settings tests")
+    raise
 
 
 class SettingsTests(unittest.TestCase):
