@@ -20,6 +20,8 @@ class PomodoroTimer:
         self._clock = clock
         self._phase = Phase.IDLE
         self._deadline = 0.0
+        self._paused = False
+        self._paused_remaining = 0.0
         self.auto_continue = True
         # The UI will plug into these two callbacks
         self.on_phase_changed: Optional[Callable[[Phase], None]] = None
@@ -30,10 +32,16 @@ class PomodoroTimer:
         return self._phase
 
     @property
+    def paused(self) -> bool:
+        return self._paused
+
+    @property
     def remaining(self) -> int:
         """Whole seconds left in the current phase."""
         if self._phase is Phase.IDLE:
             return 0
+        if self._paused:
+            return max(0, math.ceil(self._paused_remaining))
         return max(0, math.ceil(self._deadline - self._clock()))
 
     def start(self):
@@ -41,8 +49,34 @@ class PomodoroTimer:
 
     def stop(self):
         self._phase = Phase.IDLE
+        self._paused = False
+        self._paused_remaining = 0.0
         if self.on_phase_changed:
             self.on_phase_changed(Phase.IDLE)
+
+    def pause(self):
+        """Freeze the current phase without changing it."""
+        if self._phase is Phase.IDLE or self._paused:
+            return
+        self._paused_remaining = max(0.0, self._deadline - self._clock())
+        self._paused = True
+        if self.on_tick:
+            self.on_tick(self._phase, self.remaining)
+
+    def resume(self):
+        """Continue a paused phase from where it stopped."""
+        if self._phase is Phase.IDLE or not self._paused:
+            return
+        self._paused = False
+        self._deadline = self._clock() + self._paused_remaining
+        if self.on_tick:
+            self.on_tick(self._phase, self.remaining)
+
+    def toggle_pause(self):
+        if self._paused:
+            self.resume()
+        else:
+            self.pause()
 
     def set_durations(self, focus_seconds: int, break_seconds: int):
         """Applies from the next phase on; the running countdown is unchanged."""
@@ -60,7 +94,7 @@ class PomodoroTimer:
                 self.stop()
 
     def tick(self):
-        if self._phase is Phase.IDLE:
+        if self._phase is Phase.IDLE or self._paused:
             return
         if self.remaining == 0:
             self.skip()
@@ -69,6 +103,8 @@ class PomodoroTimer:
 
     def _enter(self, phase: Phase):
         self._phase = phase
+        self._paused = False
+        self._paused_remaining = 0.0
         duration = self.focus_seconds if phase is Phase.FOCUS else self.break_seconds
         self._deadline = self._clock() + duration
         if self.on_phase_changed:

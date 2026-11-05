@@ -38,6 +38,37 @@ class TimerTests(unittest.TestCase):
         self.assertIs(self.timer.phase, Phase.BREAK)
         self.assertEqual(self.timer.remaining, 120)
 
+    def test_pause_freezes_remaining_and_prevents_phase_change(self):
+        self.timer.start()
+        self.clock.advance(45 * 60)
+        self.timer.tick()
+        self.clock.advance(30)
+        self.timer.pause()
+        self.assertTrue(self.timer.paused)
+        self.assertEqual(self.timer.remaining, 90)
+        self.clock.advance(2 * 60)
+        self.timer.tick()
+        self.assertIs(self.timer.phase, Phase.BREAK)
+        self.assertEqual(self.timer.remaining, 90)
+
+    def test_resume_continues_from_paused_time(self):
+        self.timer.start()
+        self.clock.advance(45 * 60)
+        self.timer.tick()
+        self.clock.advance(30)
+        self.timer.pause()
+        self.clock.advance(100)
+        self.timer.resume()
+        self.assertFalse(self.timer.paused)
+        self.clock.advance(10)
+        self.assertEqual(self.timer.remaining, 80)
+
+    def test_stop_clears_pause(self):
+        self.timer.start()
+        self.timer.pause()
+        self.timer.stop()
+        self.assertFalse(self.timer.paused)
+
     def test_no_long_break_ever(self):
         self.timer.start()
         for _ in range(8):  # 8 focus/break rounds

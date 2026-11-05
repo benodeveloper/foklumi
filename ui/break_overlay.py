@@ -153,6 +153,7 @@ class ScreenCover(QWidget):
 class BreakOverlay(ScreenCover):
     speak_word = Signal()
     speak_sentence = Signal()
+    toggle_pause = Signal()
 
     def __init__(self, screen):
         super().__init__(screen)
@@ -182,6 +183,7 @@ class BreakOverlay(ScreenCover):
 
         btn_word = self._button("▶  Listen", self.speak_word)
         btn_sentence = self._button("▶  Listen to the sentence", self.speak_sentence)
+        self._pause_button = self._button("Pause break", self.toggle_pause)
 
         line = QFrame()
         line.setFrameShape(QFrame.HLine)
@@ -196,6 +198,7 @@ class BreakOverlay(ScreenCover):
         layout.setSpacing(12)
         layout.addStretch(2)
         layout.addWidget(self._ring, alignment=Qt.AlignHCenter)
+        layout.addWidget(self._pause_button, alignment=Qt.AlignHCenter)
         layout.addSpacing(12)
         layout.addWidget(line, alignment=Qt.AlignHCenter)
         layout.addSpacing(12)
@@ -227,9 +230,15 @@ class BreakOverlay(ScreenCover):
         button.clicked.connect(signal)
         return button
 
-    def set_countdown(self, remaining: int, total: int, color: str):
+    def set_countdown(self, remaining: int, total: int, color: str,
+                      paused: bool = False):
         self._ring.set_state(remaining / max(1, total),
-                             format_time(remaining), "BREAK", color)
+                             format_time(remaining),
+                             "PAUSED" if paused else "BREAK", color)
+
+    def set_paused(self, paused: bool):
+        self._pause_button.setText(
+            "Resume break" if paused else "Pause break")
 
     def set_word(self, word: Word):
         # Clear the dynamic container (Noun/Verb widgets)
@@ -254,16 +263,19 @@ class BreakOverlay(ScreenCover):
 class BreakScreen(QObject):
     """Covers every monitor, grabs input on X11 (if enabled), shows one word."""
 
-    def __init__(self, speaker, on_emergency, settings):
+    def __init__(self, speaker, on_emergency, settings, on_toggle_pause=None):
         super().__init__()
         self._speaker = speaker
         self._on_emergency = on_emergency
+        self._on_toggle_pause = on_toggle_pause
         self._use_grab = False
         self._color = settings.break_color
         self._emergency_key = parse_emergency_key(settings.emergency_key)
         self._windows = []
         self._main = None
         self._total = 1
+        self._remaining = 0
+        self._paused = False
         self._grab_timer = QTimer()
         self._grab_timer.setInterval(150)
         self._grab_timer.timeout.connect(self._try_grab)
@@ -289,6 +301,8 @@ class BreakScreen(QObject):
     def show(self, word: Word, total_seconds: int, auto_speak: bool):
         self.hide()
         self._total = max(1, total_seconds)
+        self._remaining = self._total
+        self._paused = False
         primary = QGuiApplication.primaryScreen()
         for screen in QGuiApplication.screens():
             if screen == primary:
@@ -299,6 +313,8 @@ class BreakScreen(QObject):
                     lambda: self._speaker.say(word.german))
                 main.speak_sentence.connect(
                     lambda: self._speaker.say(word.example_de))
+                if self._on_toggle_pause:
+                    main.toggle_pause.connect(self._on_toggle_pause)
                 self._main = main
                 self._windows.append(main)
             else:
@@ -325,12 +341,22 @@ class BreakScreen(QObject):
     def update(self, remaining: int):
         if not self._main:
             return
-        self._main.set_countdown(remaining, self._total, self._color)
+        self._remaining = remaining
+        self._main.set_countdown(remaining, self._total, self._color,
+                                 self._paused)
         for window in self._windows:  # stay above popups, panels, etc.
             window.raise_()
 
+    def set_paused(self, paused: bool):
+        self._paused = paused
+        if self._main:
+            self._main.set_paused(paused)
+            self._main.set_countdown(self._remaining, self._total,
+                                     self._color, paused)
+
     def hide(self):
         self._grab_timer.stop()
+        self._paused = False
         if self._main:
             handle = self._main.windowHandle()
             if handle:

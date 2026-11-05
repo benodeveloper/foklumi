@@ -8,6 +8,7 @@ A Pomodoro-style focus timer that turns every break into a short German vocabula
 - **Break:** a 2-minute break starts automatically (configurable). There is no long break.
 - **Locked screen:** during the break a fullscreen overlay covers every monitor. On X11 it also grabs the keyboard and mouse.
 - **One word per break:** the German word, its English translation, a plain-English explanation, an example sentence in German and its English translation.
+- **Pause a break:** freeze the countdown while you finish reading, then resume it.
 - **Listen buttons:** hear the word and the sentence spoken aloud with [Piper](https://github.com/rhasspy/piper) (natural voice), with fallbacks to espeak-ng, macOS `say` and Windows SAPI.
 - **Floating round timer:** a draggable, always-on-top circular timer with a clock-style progress ring.
 - **Settings:** timing, colors, timer size, speech speed, vocabulary file and more, saved to a JSON file.
@@ -55,6 +56,7 @@ Run the tests with `python -m unittest discover -s tests -t . -v`.
 - **Drag** the round timer to move it.
 - **Buttons:** ▶ start, ■ stop, » skip to the next phase.
 - **Right-click** the timer for **Settings…** and **Quit**.
+- **Pause break / Resume break:** pauses or resumes the countdown without hiding the word.
 - **Emergency exit:** `Esc` ends a break and stops the timer. You can choose a different key in **Settings → Break screen → Emergency exit**. All other keys are blocked during a locked break.
 - If you ever get stuck, switch to a text console with `Ctrl+Alt+F2`, log in and run `pkill -f main.py` (or `pkill -x foklumi` for the packaged build). Killing the process releases the grab.
 

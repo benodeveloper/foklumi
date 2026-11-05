@@ -49,7 +49,14 @@ def main():
     print(f"[speech] using {speaker.engine}" if speaker.available
           else f"[speech] disabled: {speaker.problem}")
 
-    overlay = BreakScreen(speaker, on_emergency=pomo.stop, settings=settings)
+    def toggle_break_pause():
+        if pomo.phase is not Phase.BREAK:
+            return
+        pomo.toggle_pause()
+        overlay.set_paused(pomo.paused)
+
+    overlay = BreakScreen(speaker, on_emergency=pomo.stop, settings=settings,
+                          on_toggle_pause=toggle_break_pause)
     overlay.configure(settings, allow_grab)
 
     tray_ok = QSystemTrayIcon.isSystemTrayAvailable()
