@@ -1,8 +1,14 @@
-# Foklumi
+<p align="center">
+  <img src="docs/assets/foklumi-logo-rounded.png" alt="Foklumi logo" width="220">
+</p>
 
-A Pomodoro-style focus timer that turns every break into a short German vocabulary lesson.
+<h1 align="center">Foklumi</h1>
 
-[![Tests](https://github.com/benodeveloper/foklumi/actions/workflows/test.yml/badge.svg)](https://github.com/benodeveloper/foklumi/actions/workflows/test.yml)
+<p align="center">A Pomodoro-style focus timer that turns every break into a short German vocabulary lesson.</p>
+
+<p align="center">
+  <a href="https://github.com/benodeveloper/foklumi/actions/workflows/test.yml"><img src="https://github.com/benodeveloper/foklumi/actions/workflows/test.yml/badge.svg" alt="Tests"></a>
+</p>
 
 **Version:** 0.1.0-beta (first beta) — **tested only on Arch Linux** (maintainer’s current system: Arch Linux rolling, X11/XFCE).
 
@@ -179,9 +185,10 @@ Output goes to `dist/foklumi/` plus a `.tar.gz` archive next to it. Run it with:
 To install it for your user on Linux:
 
 ```bash
-mkdir -p ~/.local/opt ~/.local/bin ~/.local/share/applications
+mkdir -p ~/.local/opt ~/.local/bin ~/.local/share/applications ~/.local/share/icons/hicolor/256x256/apps
 cp -r dist/foklumi ~/.local/opt/foklumi
 ln -sf ~/.local/opt/foklumi/foklumi ~/.local/bin/foklumi
+cp docs/assets/foklumi-logo-rounded.png ~/.local/share/icons/hicolor/256x256/apps/foklumi.png
 cp foklumi.desktop ~/.local/share/applications/
 ```
 

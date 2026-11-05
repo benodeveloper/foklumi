@@ -6,6 +6,7 @@ from PySide6.QtWidgets import QApplication, QMessageBox, QSystemTrayIcon
 from core.settings import Settings
 from core.timer import Phase, PomodoroTimer
 from core.vocab import VocabDeck
+from ui.assets import app_icon
 from ui.break_overlay import BreakScreen
 from ui.main_window import MainWindow
 from ui.settings_dialog import SettingsDialog
@@ -23,6 +24,9 @@ def make_deck(settings: Settings) -> VocabDeck:
 
 def main():
     app = QApplication(sys.argv)
+    icon = app_icon()
+    if not icon.isNull():
+        app.setWindowIcon(icon)
     # The app lives in the tray: hiding the timer or closing the break screen
     # must not end the program. Only "Quit" does.
     app.setQuitOnLastWindowClosed(False)

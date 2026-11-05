@@ -2,9 +2,11 @@ from PySide6.QtCore import QRectF, Qt
 from PySide6.QtGui import QColor, QIcon, QPainter, QPen, QPixmap
 from PySide6.QtWidgets import QMenu, QSystemTrayIcon
 
+from ui.assets import app_icon
 
-def make_icon(color: str) -> QIcon:
-    """A small ring icon drawn in code, so no image files are needed."""
+
+def ring_pixmap(color: str) -> QPixmap:
+    """A small phase-colored ring drawn in code."""
     pixmap = QPixmap(64, 64)
     pixmap.fill(Qt.transparent)
     p = QPainter(pixmap)
@@ -18,7 +20,20 @@ def make_icon(color: str) -> QIcon:
     p.setBrush(Qt.NoBrush)
     p.drawArc(QRectF(11, 11, 42, 42), 90 * 16, -270 * 16)
     p.end()
-    return QIcon(pixmap)
+    return pixmap
+
+
+def make_icon(color: str) -> QIcon:
+    icon = app_icon()
+    if not icon.isNull():
+        base = icon.pixmap(64, 64)
+        overlay = ring_pixmap(color)
+        p = QPainter(base)
+        p.setRenderHint(QPainter.Antialiasing)
+        p.drawPixmap(base.rect().adjusted(40, 40, 0, 0), overlay)
+        p.end()
+        return QIcon(base)
+    return QIcon(ring_pixmap(color))
 
 
 class Tray(QSystemTrayIcon):
